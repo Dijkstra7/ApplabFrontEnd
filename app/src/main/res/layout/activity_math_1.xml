@@ -4,7 +4,52 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Math">
+    tools:context=".Math_1">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/holo_green_light"
+            android:fontFamily="casual"
+            android:text="438"
+            android:textAllCaps="false"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/Button2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/holo_blue_light"
+            android:fontFamily="casual"
+            android:text="471"
+            android:textAllCaps="false"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/button3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/holo_orange_light"
+            android:fontFamily="casual"
+            android:text="472"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:typeface="normal"
+            android:visibility="visible" />
+    </LinearLayout>
 
     <ImageView
         android:id="@+id/imageView3"
@@ -12,6 +57,7 @@
         android:layout_height="231dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
+        android:layout_marginTop="46dp"
         android:contentDescription="@string/todo"
         android:scaleType="fitXY"
         app:srcCompat="@drawable/road"
@@ -24,7 +70,7 @@
         android:layout_height="52dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="156dp"
+        android:layout_marginTop="181dp"
         app:srcCompat="@drawable/carr" />
 
     <ImageView
@@ -33,15 +79,14 @@
         android:layout_height="49dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="168dp"
+        android:layout_marginTop="196dp"
         app:srcCompat="@drawable/flag" />
 
     <LinearLayout xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="372dp"
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="231dp"
+        android:layout_below="@+id/imageView3"
         android:orientation="vertical"
         android:padding="10dp">
 
@@ -49,19 +94,20 @@
             android:id="@+id/addit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Addition"
-            android:textSize="20dp"
-            android:textStyle="bold"
-            android:textColor="@color/colorPrimaryDark"
             android:layout_marginBottom="5dp"
-            android:layout_marginTop="5dp"/>
+            android:layout_marginTop="5dp"
+            android:text="Addition"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+
         <SeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:id="@+id/pbar"
             style="@style/CustomProgressBarHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:minHeight="20dp"
-            android:thumb="@drawable/baseball"/>
+            android:thumb="@drawable/baseball" />
 
         <TextView
             android:id="@+id/sub"
@@ -73,13 +119,14 @@
             android:textColor="@color/colorPrimaryDark"
             android:textSize="20dp"
             android:textStyle="bold" />
+
         <SeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:id="@+id/pbar2"
             style="@style/CustomProgressBarHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:minHeight="20dp"
-            android:thumb="@drawable/basketball"/>
+            android:thumb="@drawable/basketball" />
 
         <TextView
             android:id="@+id/mul"
@@ -91,31 +138,15 @@
             android:textColor="@color/colorPrimaryDark"
             android:textSize="20dp"
             android:textStyle="bold" />
+
         <SeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:id="@+id/pbar3"
             style="@style/CustomProgressBarHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:minHeight="20dp"
-            android:thumb="@drawable/tennis"/>
+            android:thumb="@drawable/tennis" />
 
-        <TextView
-            android:id="@+id/div"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp"
-            android:layout_marginTop="5dp"
-            android:text="Div"
-            android:textColor="@color/colorPrimaryDark"
-            android:textSize="20dp"
-            android:textStyle="bold" />
-        <SeekBar
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/pbar4"
-            style="@style/CustomProgressBarHorizontal"
-            android:minHeight="20dp"
-            android:thumb="@drawable/football"/>
     </LinearLayout>
 
 </RelativeLayout>

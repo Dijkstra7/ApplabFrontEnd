@@ -41,7 +41,7 @@ public class Home extends AppCompatActivity implements View.OnClickListener{
     public void onClick(View view) {
         switch(view.getId()) {
             case R.id.math:
-                Intent intent2 = new Intent(this, Math.class);
+                Intent intent2 = new Intent(this, Math_1.class);
                 intent2.putExtra("userID", userid);
                 startActivity(intent2);
                 break;
