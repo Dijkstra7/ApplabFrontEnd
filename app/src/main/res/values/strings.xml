@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Test Snepet</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="sing_in">Sing In</string>
+    <string name="login_name">login_name</string>
+    <string name="resultview">TextView</string>
+    <string name="todo">TODO</string>
+</resources>

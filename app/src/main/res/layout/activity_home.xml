@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/homeview"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.katrin.testsnepet.Home">
+
+    <TextView
+        android:id="@+id/resultview"
+        android:layout_width="204dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="73dp"
+        android:text="@string/resultview"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="30dp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/math"
+        android:layout_width="250dp"
+        android:layout_height="80dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="162dp"
+        android:background="@drawable/homebutton"
+        android:text="Mathematics"
+        android:textColor="#ffffff"
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/lite"
+        android:layout_width="250dp"
+        android:layout_height="80dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/homebuttonlock"
+        android:drawableStart="@drawable/block"
+        android:paddingStart="10dp"
+        android:text="Literature"
+        android:textColor="#ef7215"
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/logout"
+        android:layout_width="250dp"
+        android:layout_height="80dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="65dp"
+        android:background="@drawable/homebutton"
+        android:paddingStart="10dp"
+        android:drawableStart="@drawable/logout"
+        android:text="Log Out"
+        android:textColor="#ffffff"
+        android:textSize="18sp" />
+
+</RelativeLayout>

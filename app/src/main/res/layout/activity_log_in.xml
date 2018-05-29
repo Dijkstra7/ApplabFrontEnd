@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ef7215"
+    tools:context="com.example.katrin.testsnepet.LogIn">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="300dp"
+        android:layout_height="200dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="98dp"
+        android:contentDescription="@string/login_name"
+        android:src="@drawable/iconn" />
+
+    <EditText
+        android:id="@+id/username"
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:layout_below="@+id/imageView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:hint="@string/username"
+        android:textColorHint="#ffffff"
+        android:textAlignment="center"
+        android:textColor="#ffffff"
+        android:textSize="18sp"
+        android:background="@drawable/edittextframe"
+        android:drawableStart="@drawable/ic_action_user"/>
+
+    <EditText
+        android:id="@+id/usr_password"
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:layout_alignStart="@+id/username"
+        android:layout_below="@+id/username"
+        android:layout_marginTop="22dp"
+        android:background="@drawable/edittextframe"
+        android:ems="10"
+        android:hint="@string/password"
+        android:inputType="textPassword"
+        android:textAlignment="center"
+        android:textColor="#ffffff"
+        android:textColorHint="#ffffff"
+        android:textSize="18sp"
+        android:drawableStart="@drawable/ic_action_password"/>
+
+    <Button
+        android:id="@+id/sing_in"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:layout_below="@+id/usr_password"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="41dp"
+        android:background="@drawable/buttonedit"
+        android:text="@string/sing_in"
+        android:textColor="#ef7215"
+        android:textSize="18sp" />
+
+</RelativeLayout>
