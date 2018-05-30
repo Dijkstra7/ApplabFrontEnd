@@ -3,10 +3,9 @@ package com.example.katrin.testsnepet;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Point;
+import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -23,21 +22,16 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.HttpResponse;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class Math_1 extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
+public class Math_3 extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
     ImageView carr;
     ImageView flag_1;
     ImageView flag_2;
@@ -52,6 +46,7 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
     int width;
     boolean moveflag = false;
 
+
     @Override
     public void onBackPressed() {
         CharSequence options[] = new CharSequence[] {"Ja, uitloggen", "nee, blijven"};
@@ -61,7 +56,7 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (which == 0){
-                    Intent intent = new Intent(Math_1.this, LogIn.class);
+                    Intent intent = new Intent(Math_3.this, LogIn.class);
                     startActivity(intent);
                 }
 
@@ -73,14 +68,13 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_math_1);
+        setContentView(R.layout.activity_math_3);
 
         carr = (ImageView) findViewById(R.id.carr);
         pbar = (SeekBar) findViewById(R.id.pbar);
         add_flag_button = findViewById(R.id.button5);
         add_flag_button.setOnClickListener(this);
         flag_1 = findViewById(R.id.imageView5);
-
         flag_2 = findViewById(R.id.imageView4);
 
         findViewById(R.id.button1).setOnClickListener(this);
@@ -121,7 +115,6 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
         final int pos = USAGEDAY<4? 0: 3;
         float elowidth = width / coords.length * eloScores.getElo_scores(pos);
         animateCar(elowidth, coords);
-
         final Thread thread = new Thread(){
 
             public void run(){
@@ -131,27 +124,22 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
                         pbar.setProgress(i);
                         sleep(30);
                     }
-
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
         };
-        if (flagPositions.getCoord(1)>=0){
+        if (flagPositions.getCoord(5)>=0){
             findViewById(R.id.imageView5).setVisibility(View.VISIBLE);
-            findViewById(R.id.imageView5).setX(flagPositions.getCoord(1));
         } else {
             findViewById(R.id.imageView5).setVisibility(View.INVISIBLE);
         }
-        if (flagPositions.getCoord(2)>=0){
+        if (flagPositions.getCoord(6)>=0){
             findViewById(R.id.imageView4).setVisibility(View.VISIBLE);
-            findViewById(R.id.imageView4).setX(flagPositions.getCoord(2));
         } else {
             findViewById(R.id.imageView4).setVisibility(View.INVISIBLE);
         }
-
         thread.start();
-
     }
 
     private void animateCar(final float x, final float[] jsonArray){
@@ -180,13 +168,13 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.button5:
-                int ivid = (USAGEDAY < 4) ? R.id.imageView5: R.id.imageView4;
-                int flag = (USAGEDAY < 4) ? 1: 2;
+                int ivid = (USAGEDAY < 5) ? R.id.imageView5: R.id.imageView4;
+                int flag = (USAGEDAY < 5) ? 5: 6;
                 findViewById(ivid).setVisibility(View.VISIBLE);
                 if (moveflag){
                     add_flag_button.setText("Verplaats vlag");
                     save_flag_state(flag, findViewById(ivid).getX(), 1);
-                    flagPositions.setCoord((int) findViewById(ivid).getX(),flag);
+                    flagPositions.setCoord((int) findViewById(ivid).getX(), flag);
                 } else {
                     add_flag_button.setText("Sla vlag-positie op");
                 }
@@ -204,10 +192,10 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
                 intent2.putExtra("coorddatalist", coordDatas);
                 startActivity(intent2);
                 break;
-            case R.id.button3:
+            case R.id.button1:
                 Bundle b3 = new Bundle();
                 b3.putInt("USAGEDAY", USAGEDAY);
-                Intent intent3 = new Intent(this, Math_3.class);
+                Intent intent3 = new Intent(this, Math_1.class);
                 intent3.putExtra("userID", userid);
                 intent3.putExtra("username", userid);
                 intent3.putExtras(b3);
@@ -217,7 +205,6 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
                 startActivity(intent3);
                 break;
         }
-
     }
 
     @Override
@@ -234,23 +221,23 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
                 return true;
             }
         }
-        return false;
+    return false;
     }
 
     public void save_flag_state(final float flag, final float x, final int attempt){
         String flagurl = "http://applab.ai.ru.nl:5000/save_flag_position/user_id="+userid+"&flag=Flag"+String.valueOf((int) flag)+"&flag_coord="+String.valueOf((int) x);
-        queue.add(new JsonObjectRequest(Request.Method.POST, flagurl, null, new Response.Listener<JSONObject>() {
+        queue.add(new JsonArrayRequest(Request.Method.POST, flagurl, null, new Response.Listener<JSONArray>() {
             @Override
-            public void onResponse(JSONObject response) {
-                Toast.makeText(Math_1.this, "Vlag opgeslagen.", Toast.LENGTH_SHORT).show();
+            public void onResponse(JSONArray response) {
+                Toast.makeText(Math_3.this, "Vlag opgeslagen.", Toast.LENGTH_SHORT).show();
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                if (attempt<10){
-                    save_flag_state(flag, x, attempt+1);
+                if (attempt < 10) {
+                    save_flag_state(flag, x, attempt + 1);
                 } else {
-                    Toast.makeText(Math_1.this, "Vlag kon niet worden opgeslagen. Probeer het nog eens.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Math_3.this, "Vlag kon niet worden opgeslagen. Probeer het nog eens.", Toast.LENGTH_SHORT).show();
                     moveflag = !moveflag;
                     add_flag_button.setText("Sla vlag-positie op");
                 }

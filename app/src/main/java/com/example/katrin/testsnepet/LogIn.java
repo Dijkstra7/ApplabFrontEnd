@@ -12,6 +12,7 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.ServerError;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
@@ -24,6 +25,8 @@ import org.json.JSONObject;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 
 public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
@@ -37,11 +40,16 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
     ArrayList<Double> coordarrayday1;
     ArrayList<Double> coordarrayday2;
     ArrayList<Double> coordarrayday3;
+    ArrayList<String> loids;
+    ArrayList<String> dates;
     boolean day_1_ready = false;
     boolean day_2_ready = false;
     boolean day_3_ready = false;
     int width;
-
+    int USAGEDAY = 1;
+    FlagPositions flagPositions;
+    EloScores eloScores;
+    CoordDatas coordDatas;
     private String User_id = null;
 
     @Override
@@ -52,11 +60,16 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
         getSupportActionBar().hide();
         queue = Volley.newRequestQueue(this);
 
+        loids = new ArrayList<>(Arrays.asList("8025", "7789", "7771"));
+        dates = new ArrayList<>(Arrays.asList("2018-01-09", "2018-01-10", "2018-01-11", "2018-01-12"));
         username = (EditText) findViewById(R.id.username);
         usr_password = (EditText) findViewById(R.id.usr_password);
         sing_in = (Button) findViewById(R.id.sing_in);
         sing_in.setOnClickListener(this);
-
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(Calendar.getInstance().getTime());
+        USAGEDAY = 4;//cal.get((Calendar.DAY_OF_WEEK)); // Change day for testing
+        Log.d("date today", String.valueOf(cal.get(Calendar.DAY_OF_WEEK)));
     }
 
     @Override
@@ -86,7 +99,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                         String Passw = users.getString("Password");
                         if (pass.equals(Passw)) {
                             User_id = users.getString("UserId");
-                            getEloAndCoordinates(User_id);
+                            getFlags(User_id);
                         } else {
                             Toast.makeText(getApplicationContext(), "Username or Password is wrong please, be sure you wrote correct data! ", Toast.LENGTH_SHORT).show();
                             sing_in.setText("Log in");
@@ -107,12 +120,17 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
             @Override
             public void onErrorResponse(VolleyError error)
             {
-                if (error instanceof TimeoutError){
+                if (error instanceof TimeoutError || error instanceof ServerError){
+                    Log.d("error==>", "someerror");
                     Intent intent = new Intent(LogIn.this, Math_1.class);
                     intent.putExtra("username", "user2007");
                     intent.putExtra("userID", "2007");
                     intent.putExtra("coords", "1234");
+                    intent.putExtra("flagpositions", flagPositions);
+                    intent.putExtra("coorddatalist", coordDatas);
+                    intent.putExtra("eloscores", eloScores);
                     startActivity(intent);
+//                    getFlags(usrnm);
                 }
 
                 error.printStackTrace();
@@ -122,199 +140,140 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
 
     }
-    private void getEloAndCoordinates(final String userid){
-        String coordurl1 = "http://applab.ai.ru.nl:5000/calculate_m2m_coordinates/user_id=" + userid + "/loid=8025";
-        JsonArrayRequest arrReq1 = new JsonArrayRequest(Request.Method.GET, coordurl1, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(final JSONArray response)
-                    {
-                        final String elourlday1 = "http://applab.ai.ru.nl:5000/scores/day=1&user_id=" + userid + "&learning_obj_id=8025";
-                        final JSONArray jsonArray = response;
-                        JsonArrayRequest eloScore1 = new JsonArrayRequest(Request.Method.GET, elourlday1, null,
-                                new Response.Listener<JSONArray>() {
-                                    @Override
-                                    public void onResponse(JSONArray responseelo) {
-                                        double elodouble = 0;
-                                        try {
-                                            Log.d("Real Elo", String.valueOf(responseelo.getDouble(0)));
-                                            elodouble = responseelo.getDouble(0)/600.;
-                                            if (elodouble == 0){
-                                                elodouble = 0.5;
-                                            }
-                                            elo1 = (float) elodouble;
-                                            day_1_ready = true;
-                                            if (day_1_ready && day_2_ready && day_3_ready){
-                                                allReady();
-                                            }
 
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                        }
-
-                                    }
-                                }, new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.d("=ELO==>", "fu");
-                                error.printStackTrace();
-                            }
-                        });
-                        queue.add(eloScore1);
-                        try {
-                            if (jsonArray != null && jsonArray.length() > 0) {
-                                ArrayList<Double> coordArray = new ArrayList<Double>();
-                                for (int i = 0; i < jsonArray.length(); i++) {
-                                    coordArray.add(jsonArray.getDouble(i));
-                                }
-                                coordarrayday1 = coordArray;
-                            }else { //should be a different error message?
-                                coordarrayday1 = new ArrayList<>(Arrays.asList(0.0));
-                            }
-                        } catch(JSONException e){
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener()
-        {
+    private void getFlags(final String user_id){
+        flagPositions = new FlagPositions();
+        String flagurl = "http://applab.ai.ru.nl:5000/list_flag_positions";
+        JsonArrayRequest flagrequest = new JsonArrayRequest(Request.Method.GET, flagurl, null, new Response.Listener<JSONArray>() {
             @Override
-            public void onErrorResponse(VolleyError error)
-            {
+            public void onResponse(JSONArray response) {
+                for(int i =0; i<response.length();i++) {
+                    try {
+                        JSONObject flag_block = response.getJSONObject(i);
+                        Log.d("IS this equal?"+flag_block.getString("UserId"), user_id);
+                        if (flag_block.getString("UserId").equals(user_id)) {
+                            Log.d("Answer", "yes");
+                            for (int j = 1; j < 7; j++) {
+                                int coord = flag_block.getInt("Flag" + String.valueOf(j));
+                                flagPositions.setCoord(coord, j);
+                            }
+                            flagPositions.setFlagsreceived(true);
+                        }
+                    }catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                getEloAndCoordinates(user_id);
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                flagPositions.setFlagsreceived(true);
+                getEloAndCoordinates(user_id);
                 error.printStackTrace();
             }
         });
-        queue.add(arrReq1);
-        String coordurl2 = "http://applab.ai.ru.nl:5000/calculate_m2m_coordinates/user_id=" + userid + "/loid=7789";
-        JsonArrayRequest arrReq2 = new JsonArrayRequest(Request.Method.GET, coordurl1, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(final JSONArray response)
-                    {
-                        final String elourlday2 = "http://applab.ai.ru.nl:5000/scores/day=2&user_id=" + userid + "&learning_obj_id=7789";
-                        final JSONArray jsonArray = response;
-                        JsonArrayRequest eloScore2 = new JsonArrayRequest(Request.Method.GET, elourlday2, null,
-                                new Response.Listener<JSONArray>() {
-                                    @Override
-                                    public void onResponse(JSONArray responseelo) {
-                                        double elodouble = 0;
-                                        try {
-                                            elodouble = responseelo.getDouble(0)/600;
-                                            if (elodouble == 0){
-                                                elodouble = 0.5;
-                                            }
-                                            elo2 = (float) elodouble;
-                                            day_2_ready = true;
-                                            if (day_1_ready && day_2_ready && day_3_ready){
-                                                allReady();
-                                            }
-
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                        }
-
-                                    }
-                                }, new Response.ErrorListener() {
+        queue.add(flagrequest);
+    }
+    private void getEloAndCoordinates(final String userid) {
+        eloScores = new EloScores();
+        coordDatas = new CoordDatas();
+        String curlbase = "http://applab.ai.ru.nl:5000/calculate_m2m_coordinates/user_id=";
+        final String eurlbase = "http://applab.ai.ru.nl:5000/scores/day=";
+        for (int day=0; day<4; day++){
+            final int d = day;
+            int reps = day==3? 3:1;
+            for (int rep = 0; rep < reps; rep++) {
+                final int r = rep;
+                String coordurl1 = curlbase + userid + "/loid=" + loids.get((day+rep)%3)+"/date="+dates.get(day);
+                JsonArrayRequest arrReq1 = new JsonArrayRequest(Request.Method.GET, coordurl1, null,
+                        new Response.Listener<JSONArray>() {
                             @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.d("=ELO==>", "fu");
-                                error.printStackTrace();
-                            }
-                        });
-                        queue.add(eloScore2);
-                        try {
-                            if (jsonArray != null && jsonArray.length() > 0) {
-                                ArrayList<Double> coordArray = new ArrayList<Double>();
-                                for (int i = 0; i < jsonArray.length(); i++) {
-                                    coordArray.add(jsonArray.getDouble(i));
-                                }
-                                coordarrayday2 = coordArray;
-                            }else { //should be a different error message?
-                                coordarrayday2 = new ArrayList<>(Arrays.asList(0.0));
-                            }
-                        } catch(JSONException e){
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener()
-        {
-            @Override
-            public void onErrorResponse(VolleyError error)
-            {
-                error.printStackTrace();
-            }
-        });
-        queue.add(arrReq2);
-        String coordurl3 = "http://applab.ai.ru.nl:5000/calculate_m2m_coordinates/user_id=" + userid + "/loid=7771";
-        JsonArrayRequest arrReq3 = new JsonArrayRequest(Request.Method.GET, coordurl3, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(final JSONArray response)
-                    {
-                        final String elourlday3 = "http://applab.ai.ru.nl:5000/scores/day=3&user_id=" + userid + "&learning_obj_id=7771";
-                        final JSONArray jsonArray = response;
-                        JsonArrayRequest eloScore3 = new JsonArrayRequest(Request.Method.GET, elourlday3, null,
-                                new Response.Listener<JSONArray>() {
+                            public void onResponse(final JSONArray response) {
+                                final String elourlday1 = eurlbase + String.valueOf(d) + "&user_id=" + userid + "&learning_obj_id=" + loids.get((d+r)%3);
+                                final JSONArray jsonArray = response;
+                                JsonArrayRequest eloScore1 = new JsonArrayRequest(Request.Method.GET, elourlday1, null,
+                                        new Response.Listener<JSONArray>() {
+                                            @Override
+                                            public void onResponse(JSONArray responseelo) {
+                                                double elodouble = 0;
+                                                try {
+                                                    Log.d("Real Elo", String.valueOf(responseelo.getDouble(0)));
+                                                    elodouble = responseelo.getDouble(0) / 600.;
+                                                    if (elodouble == 0) {
+                                                        elodouble = 0;
+                                                    }
+                                                    eloScores.setElo_scores((float) elodouble, d+r);
+                                                    Log.d("Elo_ready", String.valueOf(flagPositions.isFlagsreceived()));
+                                                    if (isReady()) {
+                                                        allReady();
+                                                    }
+
+                                                } catch (JSONException e) {
+                                                    eloScores.setElo_scores((float) 0.5, d+r);
+                                                    if (isReady()) allReady();
+                                                    e.printStackTrace();
+                                                }
+
+                                            }
+                                        }, new Response.ErrorListener() {
                                     @Override
-                                    public void onResponse(JSONArray responseelo) {
-                                        double elodouble = 0;
-                                        try {
-                                            elodouble = responseelo.getDouble(0)/600;
-                                            if (elodouble == 0){
-                                                elodouble = 0.5;
-                                            }
-                                            elo3 = (float) elodouble;
-                                            day_3_ready = true;
-                                            if (day_1_ready && day_2_ready && day_3_ready){
-                                                allReady();
-                                            }
-                                        } catch (JSONException e) {
-                                            e.printStackTrace();
-                                        }
+                                    public void onErrorResponse(VolleyError error) {
+                                        Log.d("=ELO==>", "fu");
+                                        eloScores.setElo_scores((float) 0.5, d+r);
+                                        if (isReady()) allReady();
+                                        error.printStackTrace();
                                     }
-                                }, new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.d("=ELO==>", "fu");
-                                error.printStackTrace();
-                            }
-                        });
-                        queue.add(eloScore3);
-                        try {
-                            if (jsonArray != null && jsonArray.length() > 0) {
-                                ArrayList<Double> coordArray = new ArrayList<Double>();
-                                for (int i = 0; i < jsonArray.length(); i++) {
-                                    coordArray.add(jsonArray.getDouble(i));
+                                });
+                                queue.add(eloScore1);
+                                try {
+                                    if (jsonArray != null && jsonArray.length() > 0) {
+                                        float[] coordArray = new float[jsonArray.length()];
+                                        for (int i = 0; i < jsonArray.length(); i++) {
+                                            coordArray[i] = (float) jsonArray.getDouble(i);
+                                        }
+                                        coordDatas.setCoord_data(new CoordData(coordArray), d+r);
+                                        if (isReady()) allReady();
+                                    } else { //should be a different error message?
+                                        coordDatas.setCoord_data(new CoordData(new float[]{0}), d+r);
+                                        if (isReady()) allReady();
+                                    }
+                                } catch (JSONException e) {
+                                    coordDatas.setCoord_data(new CoordData(new float[]{0}), d+r);
+                                    if (isReady()) allReady();
+                                    e.printStackTrace();
                                 }
-                                coordarrayday3 = coordArray;
-                            }else { //should be a different error message?
-                                coordarrayday3 = new ArrayList<>(Arrays.asList(0.0));
                             }
-                        } catch(JSONException e){
-                            e.printStackTrace();
-                        }
+                        }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        coordDatas.setCoord_data(new CoordData(new float[]{0}), d+r);
+                        if (isReady()) allReady();
+                        error.printStackTrace();
                     }
-                }, new Response.ErrorListener()
-        {
-            @Override
-            public void onErrorResponse(VolleyError error)
-            {
-                error.printStackTrace();
+                });
+                queue.add(arrReq1);
             }
-        });
-        queue.add(arrReq3);
+        }
+    }
+
+    private boolean isReady(){
+        if (!flagPositions.isFlagsreceived()) return false;
+        if (!eloScores.isElo_scores_received()) return false;
+        if (!coordDatas.isCoord_data_received()) return false;
+        return true;
     }
 
     private void allReady(){
         Bundle b = new Bundle();
-        b.putSerializable("coordarrayday1", (Serializable) coordarrayday1);
-        b.putSerializable("coordarrayday2", (Serializable) coordarrayday2);
-        b.putSerializable("coordarrayday3", (Serializable) coordarrayday3);
-        b.putFloat("elo1",elo1);
-        b.putFloat("elo2",elo2);
-        b.putFloat("elo3",elo3);
+        b.putInt("USAGEDAY", USAGEDAY);
         Intent intent = new Intent(LogIn.this, Math_1.class);
         intent.putExtra("userID", User_id);
         intent.putExtra("username", usrnm);
+        intent.putExtra("flagpositions", flagPositions);
+        intent.putExtra("coorddatalist", coordDatas);
+        intent.putExtra("eloscores", eloScores);
         intent.putExtras(b);
         startActivity(intent);
     }
