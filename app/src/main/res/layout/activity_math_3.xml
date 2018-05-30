@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Math_1">
+    tools:context=".Math_3">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:background="@android:color/holo_green_light"
+        android:background="@android:color/holo_orange_light"
         android:orientation="horizontal">
 
         <Button
@@ -97,7 +97,8 @@
         android:layout_marginTop="133dp"
         android:cropToPadding="true"
         android:src="@drawable/greenflag"
-        android:visibility="invisible" />
+        android:visibility="invisible"
+        app:srcCompat="@drawable/orangeflag" />
 
     <ImageView
         android:id="@+id/carr"
@@ -139,10 +140,8 @@
         <SeekBar
             android:id="@+id/pbar"
             style="@style/CustomProgressBarHorizontal"
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@android:color/holo_green_light"
             android:minHeight="20dp"
             android:thumb="@drawable/baseball" />
 

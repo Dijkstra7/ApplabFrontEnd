@@ -13,7 +13,6 @@
         android:layout_height="200dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="98dp"
         android:contentDescription="@string/login_name"
         android:src="@drawable/iconn" />
 
@@ -21,18 +20,17 @@
         android:id="@+id/username"
         android:layout_width="300dp"
         android:layout_height="50dp"
-        android:layout_below="@+id/imageView"
+        android:layout_alignBottom="@+id/imageView"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="16dp"
+        android:background="@drawable/edittextframe"
+        android:drawableStart="@drawable/ic_action_user"
         android:ems="10"
-        android:inputType="textPersonName"
         android:hint="@string/username"
-        android:textColorHint="#ffffff"
+        android:inputType="textPersonName"
         android:textAlignment="center"
         android:textColor="#ffffff"
-        android:textSize="18sp"
-        android:background="@drawable/edittextframe"
-        android:drawableStart="@drawable/ic_action_user"/>
+        android:textColorHint="#ffffff"
+        android:textSize="18sp" />
 
     <EditText
         android:id="@+id/usr_password"
