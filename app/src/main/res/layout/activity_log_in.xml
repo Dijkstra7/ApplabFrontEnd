@@ -25,7 +25,7 @@
         android:background="@drawable/edittextframe"
         android:drawableStart="@drawable/ic_action_user"
         android:ems="10"
-        android:hint="@string/username"
+        android:hint="Gebruikersnaam"
         android:inputType="textPersonName"
         android:textAlignment="center"
         android:textColor="#ffffff"
@@ -41,7 +41,7 @@
         android:layout_marginTop="22dp"
         android:background="@drawable/edittextframe"
         android:ems="10"
-        android:hint="@string/password"
+        android:hint="Wachtwoord"
         android:inputType="textPassword"
         android:textAlignment="center"
         android:textColor="#ffffff"
@@ -57,7 +57,7 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="41dp"
         android:background="@drawable/buttonedit"
-        android:text="@string/sing_in"
+        android:text="Log in"
         android:textColor="#ef7215"
         android:textSize="18sp" />
 
