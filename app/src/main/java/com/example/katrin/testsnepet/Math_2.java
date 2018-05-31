@@ -23,9 +23,11 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
@@ -93,12 +95,16 @@ public class Math_2 extends AppCompatActivity implements View.OnClickListener, V
 
         pbar.setMax(100);
         pbar.setProgress(0);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
 
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
-        width = size.x - 2*(int) carr.getX();
-
+        width = size.x - carr.getMeasuredWidth();
         allReady();
     }
 
@@ -112,7 +118,7 @@ public class Math_2 extends AppCompatActivity implements View.OnClickListener, V
             flag_2.setOnTouchListener(this);
             coords = concatenate(coordDatas.getCoord_data(0).getCoord_data(), coordDatas.getCoord_data(3).getCoord_data());
         }
-        final int pos = USAGEDAY<4? 0: 3;
+        final int pos = USAGEDAY<4? 1: 4;
         float elowidth = width / coords.length * eloScores.getElo_scores(pos);
         animateCar(elowidth, coords);
 
@@ -227,9 +233,9 @@ public class Math_2 extends AppCompatActivity implements View.OnClickListener, V
 
     public void save_flag_state(final float flag, final float x, final int attempt) {
         String flagurl = "http://applab.ai.ru.nl:5000/save_flag_position/user_id="+userid+"&flag=Flag" + String.valueOf((int) flag) + "&flag_coord=" + String.valueOf((int) x);
-        queue.add(new JsonArrayRequest(Request.Method.POST, flagurl, null, new Response.Listener<JSONArray>() {
+        queue.add(new JsonObjectRequest(Request.Method.GET, flagurl, null, new Response.Listener<JSONObject>() {
             @Override
-            public void onResponse(JSONArray response) {
+            public void onResponse(JSONObject response) {
                 Toast.makeText(Math_2.this, "Vlag opgeslagen.", Toast.LENGTH_SHORT).show();
             }
         }, new Response.ErrorListener() {

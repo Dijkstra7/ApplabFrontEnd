@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
+import static java.lang.Math.min;
+
 public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
     Button sing_in;
@@ -61,7 +63,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
         queue = Volley.newRequestQueue(this);
 
         loids = new ArrayList<>(Arrays.asList("8025", "7789", "7771"));
-        dates = new ArrayList<>(Arrays.asList("2018-01-09", "2018-01-10", "2018-01-11", "2018-01-12"));
+        dates = new ArrayList<>(Arrays.asList("2017-11-28", "2017-11-29", "2017-11-30", "2017-12-01"));
         username = (EditText) findViewById(R.id.username);
         usr_password = (EditText) findViewById(R.id.usr_password);
         sing_in = (Button) findViewById(R.id.sing_in);
@@ -85,12 +87,13 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
     private void jsonParse(final String user, final String pass){
 
-        String url = "http://applab.ai.ru.nl:5000/login_users/username="+user;
+        final String url = "http://applab.ai.ru.nl:5000/login_users/username="+user;
         JsonArrayRequest arrReq = new JsonArrayRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response)
             {
+                Log.d("Received", url);
                 try
                 {
                     JSONArray jsonArray = response;
@@ -120,6 +123,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
             @Override
             public void onErrorResponse(VolleyError error)
             {
+                Log.d("Failed", url);
                 if (error instanceof TimeoutError || error instanceof ServerError){
                     Log.d("error==>", "someerror");
                     Intent intent = new Intent(LogIn.this, Math_1.class);
@@ -143,14 +147,15 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
     private void getFlags(final String user_id){
         flagPositions = new FlagPositions();
-        String flagurl = "http://applab.ai.ru.nl:5000/list_flag_positions";
+        final String flagurl = "http://applab.ai.ru.nl:5000/list_flag_positions";
         JsonArrayRequest flagrequest = new JsonArrayRequest(Request.Method.GET, flagurl, null, new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
+                Log.d("Received", flagurl);
                 for(int i =0; i<response.length();i++) {
                     try {
                         JSONObject flag_block = response.getJSONObject(i);
-                        Log.d("IS this equal?"+flag_block.getString("UserId"), user_id);
+//                        Log.d("IS this equal?"+flag_block.getString("UserId"), user_id);
                         if (flag_block.getString("UserId").equals(user_id)) {
                             Log.d("Answer", "yes");
                             for (int j = 1; j < 7; j++) {
@@ -186,24 +191,23 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
             int reps = day==3? 3:1;
             for (int rep = 0; rep < reps; rep++) {
                 final int r = rep;
-                String coordurl1 = curlbase + userid + "/loid=" + loids.get((day+rep)%3)+"/date="+dates.get(day);
+                final String coordurl1 = curlbase + userid + "/loid=" + loids.get((day+rep)%3)+"/date="+dates.get(day);
                 JsonArrayRequest arrReq1 = new JsonArrayRequest(Request.Method.GET, coordurl1, null,
                         new Response.Listener<JSONArray>() {
                             @Override
                             public void onResponse(final JSONArray response) {
-                                final String elourlday1 = eurlbase + String.valueOf(d) + "&user_id=" + userid + "&learning_obj_id=" + loids.get((d+r)%3);
+                                Log.d("Received", coordurl1);
+                                final String elourlday1 = eurlbase + String.valueOf(d+1) + "&user_id=" + userid + "&learning_obj_id=" + loids.get((d+r)%3);
                                 final JSONArray jsonArray = response;
                                 JsonArrayRequest eloScore1 = new JsonArrayRequest(Request.Method.GET, elourlday1, null,
                                         new Response.Listener<JSONArray>() {
                                             @Override
                                             public void onResponse(JSONArray responseelo) {
+                                                Log.d("Received", elourlday1);
                                                 double elodouble = 0;
                                                 try {
-                                                    Log.d("Real Elo", String.valueOf(responseelo.getDouble(0)));
-                                                    elodouble = responseelo.getDouble(0) / 600.;
-                                                    if (elodouble == 0) {
-                                                        elodouble = 0;
-                                                    }
+                                                    elodouble = min(responseelo.getDouble(0) / 600., 1.);
+                                                    Log.d("Real Elo", String.valueOf(elodouble));
                                                     eloScores.setElo_scores((float) elodouble, d+r);
                                                     Log.d("Elo_ready", String.valueOf(flagPositions.isFlagsreceived()));
                                                     if (isReady()) {
@@ -221,7 +225,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                                     @Override
                                     public void onErrorResponse(VolleyError error) {
                                         Log.d("=ELO==>", "fu");
-                                        eloScores.setElo_scores((float) 0.5, d+r);
+                                        eloScores.setElo_scores((float) 0., d+r);
                                         if (isReady()) allReady();
                                         error.printStackTrace();
                                     }

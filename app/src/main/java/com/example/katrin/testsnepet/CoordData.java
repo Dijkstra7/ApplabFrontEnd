@@ -3,6 +3,8 @@ package com.example.katrin.testsnepet;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Arrays;
+
 public class CoordData implements Parcelable {
     private float[] coord_data;
 
@@ -42,5 +44,12 @@ public class CoordData implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeFloatArray(coord_data);
+    }
+
+    @Override
+    public String toString() {
+        return "CoordData{" +
+                "coord_data=" + Arrays.toString(coord_data) +
+                '}';
     }
 }

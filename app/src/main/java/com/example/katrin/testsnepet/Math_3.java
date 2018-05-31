@@ -2,11 +2,13 @@ package com.example.katrin.testsnepet;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
@@ -23,9 +25,11 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.lang.reflect.Array;
@@ -94,11 +98,19 @@ public class Math_3 extends AppCompatActivity implements View.OnClickListener, V
         pbar.setMax(100);
         pbar.setProgress(0);
 
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
-        width = size.x - 2*(int) carr.getX();
-
+        width = size.x - carr.getMeasuredWidth();
+        Log.d("size", String.valueOf(size.x));
+        Log.d("width", String.valueOf(width));
+        Log.d("Carwidth", String.valueOf(carr.getMeasuredWidth()));
         allReady();
     }
 
@@ -112,7 +124,7 @@ public class Math_3 extends AppCompatActivity implements View.OnClickListener, V
             flag_2.setOnTouchListener(this);
             coords = concatenate(coordDatas.getCoord_data(0).getCoord_data(), coordDatas.getCoord_data(3).getCoord_data());
         }
-        final int pos = USAGEDAY<4? 0: 3;
+        final int pos = USAGEDAY<4? 2: 5;
         float elowidth = width / coords.length * eloScores.getElo_scores(pos);
         animateCar(elowidth, coords);
         final Thread thread = new Thread(){
@@ -226,9 +238,9 @@ public class Math_3 extends AppCompatActivity implements View.OnClickListener, V
 
     public void save_flag_state(final float flag, final float x, final int attempt){
         String flagurl = "http://applab.ai.ru.nl:5000/save_flag_position/user_id="+userid+"&flag=Flag"+String.valueOf((int) flag)+"&flag_coord="+String.valueOf((int) x);
-        queue.add(new JsonArrayRequest(Request.Method.POST, flagurl, null, new Response.Listener<JSONArray>() {
+        queue.add(new JsonObjectRequest(Request.Method.GET, flagurl, null, new Response.Listener<JSONObject>() {
             @Override
-            public void onResponse(JSONArray response) {
+            public void onResponse(JSONObject response) {
                 Toast.makeText(Math_3.this, "Vlag opgeslagen.", Toast.LENGTH_SHORT).show();
             }
         }, new Response.ErrorListener() {

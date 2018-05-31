@@ -50,6 +50,7 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
     CoordDatas coordDatas;
     int USAGEDAY;
     int width;
+    int flag_id;
     boolean moveflag = false;
 
     @Override
@@ -75,12 +76,12 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_math_1);
 
-        carr = (ImageView) findViewById(R.id.carr);
-        pbar = (SeekBar) findViewById(R.id.pbar);
+        carr = findViewById(R.id.carr);
+        pbar = findViewById(R.id.pbar);
         add_flag_button = findViewById(R.id.button5);
         add_flag_button.setOnClickListener(this);
+        flag_id = (USAGEDAY<4)?R.id.imageView5:R.id.imageView4;
         flag_1 = findViewById(R.id.imageView5);
-
         flag_2 = findViewById(R.id.imageView4);
 
         findViewById(R.id.button1).setOnClickListener(this);
@@ -99,23 +100,26 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
 
         pbar.setMax(100);
         pbar.setProgress(0);
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
 
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
-        width = size.x - 2*(int) carr.getX();
-
+        width = size.x - carr.getMeasuredWidth();
         allReady();
     }
 
     public void allReady(){
         float coords[];
+        findViewById(flag_id).setOnTouchListener(this);
         if (USAGEDAY < 4){
-            flag_1.setOnTouchListener(this);
             coords = coordDatas.getCoord_data(0).getCoord_data();
         } else{
             flag_1.setVisibility(View.VISIBLE);
-            flag_2.setOnTouchListener(this);
             coords = concatenate(coordDatas.getCoord_data(0).getCoord_data(), coordDatas.getCoord_data(3).getCoord_data());
         }
         final int pos = USAGEDAY<4? 0: 3;
@@ -185,7 +189,9 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
                 findViewById(ivid).setVisibility(View.VISIBLE);
                 if (moveflag){
                     add_flag_button.setText("Verplaats vlag");
-                    save_flag_state(flag, findViewById(ivid).getX(), 1);
+                    int[] location = new int[2];
+                    findViewById(ivid).getLocationOnScreen(location);
+                    save_flag_state(flag, location[0], 1);
                     flagPositions.setCoord((int) findViewById(ivid).getX(),flag);
                 } else {
                     add_flag_button.setText("Sla vlag-positie op");
@@ -222,24 +228,25 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        if (v.getId() == R.id.imageView5 && moveflag) {
+        if (v.getId() == flag_id && moveflag) {
             int action = event.getAction();
             Log.d("I touch with action", String.valueOf(action));
             if (action == MotionEvent.ACTION_DOWN) {
-                findViewById(R.id.imageView5).setX(event.getRawX());
+                findViewById(flag_id).setX(event.getRawX());
                 return true;
             }
             if (action == MotionEvent.ACTION_MOVE){
-                findViewById(R.id.imageView5).setX(event.getRawX());
+                findViewById(flag_id).setX(event.getRawX());
                 return true;
             }
         }
+
         return false;
     }
 
     public void save_flag_state(final float flag, final float x, final int attempt){
         String flagurl = "http://applab.ai.ru.nl:5000/save_flag_position/user_id="+userid+"&flag=Flag"+String.valueOf((int) flag)+"&flag_coord="+String.valueOf((int) x);
-        queue.add(new JsonObjectRequest(Request.Method.POST, flagurl, null, new Response.Listener<JSONObject>() {
+        queue.add(new JsonObjectRequest(Request.Method.GET, flagurl, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 Toast.makeText(Math_1.this, "Vlag opgeslagen.", Toast.LENGTH_SHORT).show();
