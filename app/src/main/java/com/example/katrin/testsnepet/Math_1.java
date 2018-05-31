@@ -146,9 +146,18 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
                         pbar.setProgress(i);
                         sleep(30);
                     }
-                    baseballmirror.setClipBounds(pbar.getThumb().getBounds());
-                    baseballmirror.setVisibility(View.VISIBLE);
-                    for (int i = (int) (100. * eloScores.getElo_scores(0));i<eloScores.getElo_scores(3); i++){
+                    //TODO: change hardcoded offsets
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            int[] baseball_location = new int[2];
+                            pbar.getLocationOnScreen(baseball_location);
+                            baseballmirror.setX(baseball_location[0]+pbar.getThumb().getBounds().centerX()-pbar.getThumbOffset()-7);;
+                            baseballmirror.setY(baseball_location[1]+pbar.getThumb().getBounds().centerY()-pbar.getBottom()-15);
+                            baseballmirror.setVisibility(View.VISIBLE);
+                        }
+                    });
+                    for (int i = pbar.getProgress(); i<(100. * eloScores.getElo_scores(3)); i++){
                         pbar.setProgress(i);
                         sleep(30);
                     }

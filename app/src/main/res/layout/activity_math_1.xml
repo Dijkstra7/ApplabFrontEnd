@@ -127,14 +127,7 @@
         android:layout_marginTop="196dp"
         app:srcCompat="@drawable/flag" />
 
-    <ImageView
-        android:id="@+id/thumb_mirror"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="invisible"
-        app:srcCompat="@drawable/baseball2" />
-
-    <LinearLayout xmlns:tools="http://schemas.android.com/tools"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="372dp"
         android:layout_alignParentStart="true"
@@ -164,5 +157,12 @@
             android:thumb="@drawable/baseball" />
 
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/thumb_mirror"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        app:srcCompat="@drawable/baseball2" />
 
 </RelativeLayout>
