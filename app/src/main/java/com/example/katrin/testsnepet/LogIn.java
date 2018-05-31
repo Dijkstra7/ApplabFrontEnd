@@ -273,7 +273,18 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                                         }
                                         error.printStackTrace();
                                     }
-                                });
+                                }){
+                                    @Override
+                                    public Map<String, String> getHeaders() throws AuthFailureError {
+                                        Map<String, String> headers = new HashMap<>();
+                                        String credentials = "Group2:Group2-1234";
+                                        String auth = "Basic "
+                                                + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
+                                        headers.put("Content-Type", "application/json");
+                                        headers.put("Authorization", auth);
+                                        return headers;
+                                    }
+                                };
                                 queue.add(eloScore1);
                                 try {
                                     if (jsonArray != null && jsonArray.length() > 0) {
@@ -303,7 +314,18 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                         }
                         error.printStackTrace();
                     }
-                });
+                }){
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        Map<String, String> headers = new HashMap<>();
+                        String credentials = "Group2:Group2-1234";
+                        String auth = "Basic "
+                                + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
+                        headers.put("Content-Type", "application/json");
+                        headers.put("Authorization", auth);
+                        return headers;
+                    }
+                };
                 queue.add(arrReq1);
             }
         }
