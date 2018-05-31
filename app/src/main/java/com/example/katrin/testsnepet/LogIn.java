@@ -48,7 +48,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
     boolean day_2_ready = false;
     boolean day_3_ready = false;
     int width;
-    int USAGEDAY = 1;
+    int USAGEDAY;
     FlagPositions flagPositions;
     EloScores eloScores;
     CoordDatas coordDatas;
@@ -125,16 +125,8 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
             {
                 Log.d("Failed", url);
                 if (error instanceof TimeoutError || error instanceof ServerError){
-                    Log.d("error==>", "someerror");
-                    Intent intent = new Intent(LogIn.this, Math_1.class);
-                    intent.putExtra("username", "user2007");
-                    intent.putExtra("userID", "2007");
-                    intent.putExtra("coords", "1234");
-                    intent.putExtra("flagpositions", flagPositions);
-                    intent.putExtra("coorddatalist", coordDatas);
-                    intent.putExtra("eloscores", eloScores);
-                    startActivity(intent);
-//                    getFlags(usrnm);
+                    Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
+                    sing_in.setText("Inloggen");
                 }
 
                 error.printStackTrace();
@@ -174,8 +166,11 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                flagPositions.setFlagsreceived(true);
-                getEloAndCoordinates(user_id);
+                Log.d("Failed", flagurl);
+                if (error instanceof TimeoutError || error instanceof ServerError){
+                    Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
+                    sing_in.setText("Inloggen");
+                }
                 error.printStackTrace();
             }
         });
@@ -224,9 +219,11 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                                         }, new Response.ErrorListener() {
                                     @Override
                                     public void onErrorResponse(VolleyError error) {
-                                        Log.d("=ELO==>", "fu");
-                                        eloScores.setElo_scores((float) 0., d+r);
-                                        if (isReady()) allReady();
+                                        Log.d("Failed", elourlday1);
+                                        if (error instanceof TimeoutError || error instanceof ServerError){
+                                            Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
+                                            sing_in.setText("Inloggen");
+                                        }
                                         error.printStackTrace();
                                     }
                                 });
@@ -252,8 +249,11 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                         }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        coordDatas.setCoord_data(new CoordData(new float[]{0}), d+r);
-                        if (isReady()) allReady();
+                        Log.d("Failed", coordurl1);
+                        if (error instanceof TimeoutError || error instanceof ServerError){
+                            Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
+                            sing_in.setText("Inloggen");
+                        }
                         error.printStackTrace();
                     }
                 });
@@ -267,6 +267,14 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
         if (!eloScores.isElo_scores_received()) return false;
         if (!coordDatas.isCoord_data_received()) return false;
         return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_HOME);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
     private void allReady(){

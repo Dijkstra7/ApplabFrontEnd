@@ -74,7 +74,7 @@
         android:layout_marginEnd="18dp"
         android:layout_marginTop="62dp"
         android:background="@android:color/holo_orange_dark"
-        android:text="Add Flag" />
+        android:text="Voeg vlag toe" />
 
     <ImageView
         android:id="@+id/imageView4"
@@ -109,6 +109,16 @@
         app:srcCompat="@drawable/carr" />
 
     <ImageView
+        android:id="@+id/carr2"
+        android:layout_width="50dp"
+        android:layout_height="52dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="181dp"
+        android:visibility="visible"
+        app:srcCompat="@drawable/carr2" />
+
+    <ImageView
         android:id="@+id/imageView2"
         android:layout_width="41dp"
         android:layout_height="49dp"
@@ -116,6 +126,13 @@
         android:layout_alignParentTop="true"
         android:layout_marginTop="196dp"
         app:srcCompat="@drawable/flag" />
+
+    <ImageView
+        android:id="@+id/thumb_mirror"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        app:srcCompat="@drawable/baseball2" />
 
     <LinearLayout xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"

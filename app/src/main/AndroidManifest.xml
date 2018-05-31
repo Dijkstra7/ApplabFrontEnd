@@ -19,9 +19,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".Home" />
-        <activity android:name=".Math_1"></activity>
-        <activity android:name=".Math_2"></activity>
-        <activity android:name=".Math_3"></activity>
+        <activity android:name=".Math_1" android:noHistory="true"></activity>
+        <activity android:name=".Math_2" android:noHistory="true"></activity>
+        <activity android:name=".Math_3" android:noHistory="true"></activity>
     </application>
 
 </manifest>

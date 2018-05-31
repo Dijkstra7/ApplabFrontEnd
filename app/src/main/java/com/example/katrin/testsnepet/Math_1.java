@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.TranslateAnimation;
@@ -39,8 +40,10 @@ import java.util.Arrays;
 
 public class Math_1 extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
     ImageView carr;
+    ImageView carr2;
     ImageView flag_1;
     ImageView flag_2;
+    ImageView baseballmirror;
     SeekBar pbar;
     Button add_flag_button;
     String userid;
@@ -48,6 +51,7 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
     FlagPositions flagPositions;
     EloScores eloScores;
     CoordDatas coordDatas;
+    boolean two_days;
     int USAGEDAY;
     int width;
     int flag_id;
@@ -77,13 +81,15 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
         setContentView(R.layout.activity_math_1);
 
         carr = findViewById(R.id.carr);
+        carr2 = findViewById(R.id.carr2);
+        baseballmirror = findViewById(R.id.thumb_mirror);
         pbar = findViewById(R.id.pbar);
         add_flag_button = findViewById(R.id.button5);
         add_flag_button.setOnClickListener(this);
-        flag_id = (USAGEDAY<4)?R.id.imageView5:R.id.imageView4;
         flag_1 = findViewById(R.id.imageView5);
         flag_2 = findViewById(R.id.imageView4);
-
+        flag_1.setOnTouchListener(this);
+        flag_2.setOnTouchListener(this);
         findViewById(R.id.button1).setOnClickListener(this);
         findViewById(R.id.Button2).setOnClickListener(this);
         findViewById(R.id.button3).setOnClickListener(this);
@@ -95,7 +101,7 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
         eloScores = intent.getParcelableExtra("eloscores");
         flagPositions = intent.getParcelableExtra("flagpositions");
         USAGEDAY = b.getInt("USAGEDAY");
-
+        Log.d("usageday", String.valueOf(USAGEDAY));
         queue = Volley.newRequestQueue(this);
 
         pbar.setMax(100);
@@ -114,24 +120,35 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
     }
 
     public void allReady(){
-        float coords[];
-        findViewById(flag_id).setOnTouchListener(this);
+        float coords1[];
+        float coords2[] = {};
+        final int pos;
+        coords1 = coordDatas.getCoord_data(0).getCoord_data();
         if (USAGEDAY < 4){
-            coords = coordDatas.getCoord_data(0).getCoord_data();
+            flag_id = R.id.imageView5;
+            two_days = false;
         } else{
+            flag_id = R.id.imageView4;
             flag_1.setVisibility(View.VISIBLE);
-            coords = concatenate(coordDatas.getCoord_data(0).getCoord_data(), coordDatas.getCoord_data(3).getCoord_data());
+            coords2 = coordDatas.getCoord_data(3).getCoord_data();
+            two_days = true;
         }
-        final int pos = USAGEDAY<4? 0: 3;
-        float elowidth = width / coords.length * eloScores.getElo_scores(pos);
-        animateCar(elowidth, coords);
+        float elowidthday1 = width / coords1.length *eloScores.getElo_scores(0);
+        float elowidthday2 = width / coords2.length * (eloScores.getElo_scores(3) - eloScores.getElo_scores(0));
+        animateCar(elowidthday1, elowidthday2, coords1, coords2, two_days);
 
         final Thread thread = new Thread(){
 
             public void run(){
                 try {
-                    Log.d("Elo1", String.valueOf(100.*eloScores.getElo_scores(pos)));
-                    for (int i = 0; i < 100.*eloScores.getElo_scores(pos); i++){
+                    Log.d("Elo1", String.valueOf(100.*eloScores.getElo_scores(0)));
+                    for (int i = 0; i < 100.*eloScores.getElo_scores(0); i++){
+                        pbar.setProgress(i);
+                        sleep(30);
+                    }
+                    baseballmirror.setClipBounds(pbar.getThumb().getBounds());
+                    baseballmirror.setVisibility(View.VISIBLE);
+                    for (int i = (int) (100. * eloScores.getElo_scores(0));i<eloScores.getElo_scores(3); i++){
                         pbar.setProgress(i);
                         sleep(30);
                     }
@@ -158,26 +175,57 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
 
     }
 
-    private void animateCar(final float x, final float[] jsonArray){
-        Log.d("Elo", String.valueOf(x));
+    private void animateCar(final float x1, final float x2, final float[] coordarray1, final float[] coordarray2, final boolean move_twice){
+        Log.d("Elo-width day 2", String.valueOf(x2));
         AnimationSet s = new AnimationSet(false);
+        AnimationSet s2 = new AnimationSet(false);
         s.setFillAfter(true);
+        s2.setFillAfter(true);
         float old_y=0;
-        for (int i = 0; i < jsonArray.length; i++)
-        {
-            float y = jsonArray[i] * 50;
+        for (int i = 0; i < coordarray1.length; i++)
+        { //move car first time
+            float y = coordarray1[i] * 50;
             if (i>0){
                 y = y - old_y;
             }
-            old_y = jsonArray[i]*50;
+            old_y = coordarray1[i]*50;
 
-            Animation anm = new TranslateAnimation(0, x, 0, y);
+            Animation anm = new TranslateAnimation(0, x1, 0, y);
+            Animation anm2 = new TranslateAnimation(0, x1, 0, y);
             anm.setDuration(150);
+            anm2.setDuration(150);
             anm.setStartOffset(150*i);
+            anm2.setStartOffset(150*i);
+            s2.addAnimation(anm2);
             s.addAnimation(anm);
+//            Log.d("animation", String.valueOf(s2.getAnimations().size()));
             Log.d("coord "+String.valueOf(i), String.valueOf(y));
         }
-        carr.startAnimation(s);
+        if (move_twice) {
+            int new_car_delay = 500; //ms waiting before moving again
+            Animation anm_vis = new AlphaAnimation(0,1);
+            anm_vis.setDuration(new_car_delay);
+            anm_vis.setStartOffset(coordarray1.length*150);
+            s2.addAnimation(anm_vis);
+
+            for (int i = 0; i < coordarray2.length; i++)
+            { // move car second time
+                float y = coordarray2[i] * 50;
+                if (i>0){
+                    y = y - old_y;
+                }
+                old_y = coordarray2[i]*50;
+
+                Animation anm = new TranslateAnimation(0, x2, 0, y);
+                anm.setDuration(150);
+                anm.setStartOffset(150*(i+coordarray1.length)+new_car_delay);
+                s.addAnimation(anm);
+//            Log.d("coord "+String.valueOf(i), String.valueOf(y));
+            }
+        }
+        if ((coordarray1.length+coordarray2.length)>0) carr.startAnimation(s);
+        Log.d("Animation", String.valueOf(s2.getAnimations().size()));
+        if (move_twice && coordarray1.length>0) carr2.startAnimation(s2);
     }
 
     @Override
@@ -228,6 +276,8 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
+        Log.d("Touchaction", String.valueOf(v.getId())+" " +String.valueOf(event.getAction())+String.valueOf(moveflag));
+        Log.d("flag_id", String.valueOf(flag_id));
         if (v.getId() == flag_id && moveflag) {
             int action = event.getAction();
             Log.d("I touch with action", String.valueOf(action));
