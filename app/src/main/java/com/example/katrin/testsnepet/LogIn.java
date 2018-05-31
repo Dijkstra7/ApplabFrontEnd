@@ -1,14 +1,17 @@
 package com.example.katrin.testsnepet;
 
 import android.content.Intent;
+import android.provider.SyncStateContract;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -23,10 +26,15 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static java.lang.Math.min;
 
@@ -81,13 +89,28 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
             usrnm = username.getText().toString();
             String psswrd = usr_password.getText().toString();
             sing_in.setText("Inloggen...");
-            jsonParse(usrnm, psswrd);
+
+            // encrypt
+            MessageDigest digest = null;
+            try {
+                digest = MessageDigest.getInstance("SHA-256");
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+            assert digest != null;
+            byte[] h_psw = digest.digest(psswrd.getBytes(StandardCharsets.UTF_8));
+
+            String sh_psw = Base64.encodeToString(h_psw, Base64.URL_SAFE | Base64.NO_PADDING);
+
+            Log.d("Hashed ", " Username "+usrnm+" Password "+sh_psw);
+
+            jsonParse(usrnm, sh_psw);
         }
     }
 
     private void jsonParse(final String user, final String pass){
 
-        final String url = "http://applab.ai.ru.nl:5000/login_users/username="+user;
+        final String url = "http://applab.ai.ru.nl:5000/user_login/user="+user+"&password="+pass;
         JsonArrayRequest arrReq = new JsonArrayRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONArray>() {
             @Override
@@ -97,17 +120,19 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                 try
                 {
                     JSONArray jsonArray = response;
-                    JSONObject users = jsonArray.getJSONObject(0);
-                    if (jsonArray != null && jsonArray.length() > 0) {
-                        String Passw = users.getString("Password");
-                        if (pass.equals(Passw)) {
-                            User_id = users.getString("UserId");
+                    Log.d("RESPONSE", String.valueOf(response));
+                    JSONObject resp = jsonArray.getJSONObject(0);
+                    if (jsonArray != null && jsonArray.length() != 0) {
+                        String AccessPermission = resp.getString("message");
+                        if (AccessPermission.equals("Login Correct")) {
+                            User_id = resp.getString("User_ID");
+                            Log.d("USERID", User_id);
                             getFlags(User_id);
                         } else {
-                            Toast.makeText(getApplicationContext(), "Username or Password is wrong please, be sure you wrote correct data! ", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), AccessPermission+", please be sure you wrote correct data! ", Toast.LENGTH_SHORT).show();
                             sing_in.setText("Log in");
                         }
-                        Log.d("====>", "User_ID ="+User_id+"; Pass ="+Passw+"; Should be "+pass+";");
+                        Log.d("====>", "Response from API: "+AccessPermission);
                     }
                 } catch (JSONException e)
                 {
@@ -131,7 +156,18 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
                 error.printStackTrace();
             }
-        });
+        }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                String credentials = "Group2:Group2-1234";
+                String auth = "Basic "
+                        + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
+                headers.put("Content-Type", "application/json");
+                headers.put("Authorization", auth);
+                return headers;
+            }
+        };
         queue.add(arrReq);
 
 
@@ -173,7 +209,18 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                 }
                 error.printStackTrace();
             }
-        });
+        }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                String credentials = "Group2:Group2-1234";
+                String auth = "Basic "
+                        + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
+                headers.put("Content-Type", "application/json");
+                headers.put("Authorization", auth);
+                return headers;
+            }
+        };
         queue.add(flagrequest);
     }
     private void getEloAndCoordinates(final String userid) {
