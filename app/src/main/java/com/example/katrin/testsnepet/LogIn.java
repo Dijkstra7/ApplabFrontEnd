@@ -1,7 +1,6 @@
 package com.example.katrin.testsnepet;
 
 import android.content.Intent;
-import android.provider.SyncStateContract;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -25,14 +24,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +34,7 @@ import static java.lang.Math.min;
 
 public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
-    Button sing_in;
+    Button login;
     EditText usr_password, username;
     RequestQueue queue;
     String usrnm;
@@ -74,11 +68,11 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
         dates = new ArrayList<>(Arrays.asList("2017-11-28", "2017-11-29", "2017-11-30", "2017-12-01"));
         username = (EditText) findViewById(R.id.username);
         usr_password = (EditText) findViewById(R.id.usr_password);
-        sing_in = (Button) findViewById(R.id.sing_in);
-        sing_in.setOnClickListener(this);
+        login = (Button) findViewById(R.id.sing_in);
+        login.setOnClickListener(this);
         Calendar cal = Calendar.getInstance();
         cal.setTime(Calendar.getInstance().getTime());
-        USAGEDAY = 4;//cal.get((Calendar.DAY_OF_WEEK)); // Change day for testing
+        USAGEDAY = cal.get((Calendar.DAY_OF_WEEK))-2; // Monday =0, Tuesday=1 etc.
         Log.d("date today", String.valueOf(cal.get(Calendar.DAY_OF_WEEK)));
     }
 
@@ -88,29 +82,14 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
             usrnm = username.getText().toString();
             String psswrd = usr_password.getText().toString();
-            sing_in.setText("Inloggen...");
-
-            // encrypt
-            MessageDigest digest = null;
-            try {
-                digest = MessageDigest.getInstance("SHA-256");
-            } catch (NoSuchAlgorithmException e) {
-                e.printStackTrace();
-            }
-            assert digest != null;
-            byte[] h_psw = digest.digest(psswrd.getBytes(StandardCharsets.UTF_8));
-
-            String sh_psw = Base64.encodeToString(h_psw, Base64.URL_SAFE | Base64.NO_PADDING);
-
-            Log.d("Hashed ", " Username "+usrnm+" Password "+sh_psw);
-
-            jsonParse(usrnm, sh_psw);
+            login.setText("Inloggen...");
+            jsonParse(usrnm, psswrd);
         }
     }
 
     private void jsonParse(final String user, final String pass){
 
-        final String url = "http://applab.ai.ru.nl:5000/user_login/user="+user+"&password="+pass;
+        final String url = "http://applab.ai.ru.nl:5000/login_users/username="+user;
         JsonArrayRequest arrReq = new JsonArrayRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONArray>() {
             @Override
@@ -120,25 +99,23 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                 try
                 {
                     JSONArray jsonArray = response;
-                    Log.d("RESPONSE", String.valueOf(response));
-                    JSONObject resp = jsonArray.getJSONObject(0);
-                    if (jsonArray != null && jsonArray.length() != 0) {
-                        String AccessPermission = resp.getString("message");
-                        if (AccessPermission.equals("Login Correct")) {
-                            User_id = resp.getString("User_ID");
-                            Log.d("USERID", User_id);
+                    JSONObject users = jsonArray.getJSONObject(0);
+                    if (jsonArray != null && jsonArray.length() > 0) {
+                        String Passw = users.getString("Password");
+                        if (pass.equals(Passw)) {
+                            User_id = users.getString("UserId");
                             getFlags(User_id);
                         } else {
-                            Toast.makeText(getApplicationContext(), AccessPermission+", please be sure you wrote correct data! ", Toast.LENGTH_SHORT).show();
-                            sing_in.setText("Log in");
+                            Toast.makeText(getApplicationContext(), "Username or Password is wrong please, be sure you wrote correct data! ", Toast.LENGTH_SHORT).show();
+                            login.setText("Log in");
                         }
-                        Log.d("====>", "Response from API: "+AccessPermission);
+                        Log.d("====>", "User_ID ="+User_id+"; Pass ="+Passw+"; Should be "+pass+";");
                     }
                 } catch (JSONException e)
                 {
                     if (e instanceof JSONException){
                         Toast.makeText(getApplicationContext(), "Username or Password is wrong please, be sure you wrote correct data! ", Toast.LENGTH_SHORT).show();
-                        sing_in.setText("Log in");
+                        login.setText("Log in");
                     }
                     e.printStackTrace();
                 }
@@ -151,7 +128,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                 Log.d("Failed", url);
                 if (error instanceof TimeoutError || error instanceof ServerError){
                     Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
-                    sing_in.setText("Inloggen");
+                    login.setText("Inloggen");
                 }
 
                 error.printStackTrace();
@@ -205,7 +182,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                 Log.d("Failed", flagurl);
                 if (error instanceof TimeoutError || error instanceof ServerError){
                     Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
-                    sing_in.setText("Inloggen");
+                    login.setText("Inloggen");
                 }
                 error.printStackTrace();
             }
@@ -233,78 +210,107 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
             int reps = day==3? 3:1;
             for (int rep = 0; rep < reps; rep++) {
                 final int r = rep;
-                final String coordurl1 = curlbase + userid + "/loid=" + loids.get((day+rep)%3)+"/date="+dates.get(day);
-                JsonArrayRequest arrReq1 = new JsonArrayRequest(Request.Method.GET, coordurl1, null,
-                        new Response.Listener<JSONArray>() {
-                            @Override
-                            public void onResponse(final JSONArray response) {
-                                Log.d("Received", coordurl1);
-                                final String elourlday1 = eurlbase + String.valueOf(d+1) + "&user_id=" + userid + "&learning_obj_id=" + loids.get((d+r)%3);
-                                final JSONArray jsonArray = response;
-                                JsonArrayRequest eloScore1 = new JsonArrayRequest(Request.Method.GET, elourlday1, null,
-                                        new Response.Listener<JSONArray>() {
-                                            @Override
-                                            public void onResponse(JSONArray responseelo) {
-                                                Log.d("Received", elourlday1);
-                                                double elodouble = 0;
-                                                try {
-                                                    elodouble = min(responseelo.getDouble(0) / 600., 1.);
-                                                    Log.d("Real Elo", String.valueOf(elodouble));
-                                                    eloScores.setElo_scores((float) elodouble, d+r);
-                                                    Log.d("Elo_ready", String.valueOf(flagPositions.isFlagsreceived()));
-                                                    if (isReady()) {
-                                                        allReady();
+                if (d>=USAGEDAY){
+                    eloScores.setElo_scores((float) 0, d+r);
+                    coordDatas.setCoord_data(new CoordData(new float[]{0}), d+r);
+                    if (isReady()) allReady();
+                } else {
+                    final String coordurl1 = curlbase + userid + "/loid=" + loids.get((day+rep)%3)+"/date="+dates.get(day);
+                    JsonArrayRequest arrReq1 = new JsonArrayRequest(Request.Method.GET, coordurl1, null,
+                            new Response.Listener<JSONArray>() {
+                                @Override
+                                public void onResponse(final JSONArray response) {
+                                    Log.d("Received", coordurl1);
+                                    final String elourlday1 = eurlbase + String.valueOf(d+1) + "&user_id=" + userid + "&learning_obj_id=" + loids.get((d+r)%3);
+                                    final JSONArray jsonArray = response;
+                                    JsonArrayRequest eloScore1 = new JsonArrayRequest(Request.Method.GET, elourlday1, null,
+                                            new Response.Listener<JSONArray>() {
+                                                @Override
+                                                public void onResponse(JSONArray responseelo) {
+                                                    Log.d("Received", elourlday1);
+                                                    double elodouble = 0;
+                                                    try {
+                                                        elodouble = min(responseelo.getDouble(0) / 600., 1.);
+                                                        Log.d("Real Elo", String.valueOf(elodouble));
+                                                        eloScores.setElo_scores((float) elodouble, d+r);
+                                                        Log.d("Elo_ready", String.valueOf(flagPositions.isFlagsreceived()));
+                                                        if (isReady()) {
+                                                            allReady();
+                                                        }
+
+                                                    } catch (JSONException e) {
+                                                        eloScores.setElo_scores((float) 0
+                                                                , d+r);
+                                                        if (isReady()) allReady();
+                                                        e.printStackTrace();
                                                     }
 
-                                                } catch (JSONException e) {
-                                                    eloScores.setElo_scores((float) 0.5, d+r);
-                                                    if (isReady()) allReady();
-                                                    e.printStackTrace();
                                                 }
-
+                                            }, new Response.ErrorListener() {
+                                        @Override
+                                        public void onErrorResponse(VolleyError error) {
+                                            Log.d("Failed", elourlday1);
+                                            if (error instanceof TimeoutError || error instanceof ServerError){
+                                                Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
+                                                login.setText("Inloggen");
                                             }
-                                        }, new Response.ErrorListener() {
-                                    @Override
-                                    public void onErrorResponse(VolleyError error) {
-                                        Log.d("Failed", elourlday1);
-                                        if (error instanceof TimeoutError || error instanceof ServerError){
-                                            Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
-                                            sing_in.setText("Inloggen");
+                                            error.printStackTrace();
                                         }
-                                        error.printStackTrace();
-                                    }
-                                });
-                                queue.add(eloScore1);
-                                try {
-                                    if (jsonArray != null && jsonArray.length() > 0) {
-                                        float[] coordArray = new float[jsonArray.length()];
-                                        for (int i = 0; i < jsonArray.length(); i++) {
-                                            coordArray[i] = (float) jsonArray.getDouble(i);
+                                    }){
+                                        @Override
+                                        public Map<String, String> getHeaders() throws AuthFailureError {
+                                            Map<String, String> headers = new HashMap<>();
+                                            String credentials = "Group2:Group2-1234";
+                                            String auth = "Basic "
+                                                    + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
+                                            headers.put("Content-Type", "application/json");
+                                            headers.put("Authorization", auth);
+                                            return headers;
                                         }
-                                        coordDatas.setCoord_data(new CoordData(coordArray), d+r);
-                                        if (isReady()) allReady();
-                                    } else { //should be a different error message?
+                                    };
+                                    queue.add(eloScore1);
+                                    try {
+                                        if (jsonArray != null && jsonArray.length() > 0) {
+                                            float[] coordArray = new float[jsonArray.length()];
+                                            for (int i = 0; i < jsonArray.length(); i++) {
+                                                coordArray[i] = (float) jsonArray.getDouble(i);
+                                            }
+                                            coordDatas.setCoord_data(new CoordData(coordArray), d+r);
+                                            if (isReady()) allReady();
+                                        } else { //should be a different error message?
+                                            coordDatas.setCoord_data(new CoordData(new float[]{0}), d+r);
+                                            if (isReady()) allReady();
+                                        }
+                                    } catch (JSONException e) {
                                         coordDatas.setCoord_data(new CoordData(new float[]{0}), d+r);
                                         if (isReady()) allReady();
+                                        e.printStackTrace();
                                     }
-                                } catch (JSONException e) {
-                                    coordDatas.setCoord_data(new CoordData(new float[]{0}), d+r);
-                                    if (isReady()) allReady();
-                                    e.printStackTrace();
                                 }
+                            }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.d("Failed", coordurl1);
+                            if (error instanceof TimeoutError || error instanceof ServerError){
+                                Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
+                                login.setText("Inloggen");
                             }
-                        }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.d("Failed", coordurl1);
-                        if (error instanceof TimeoutError || error instanceof ServerError){
-                            Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
-                            sing_in.setText("Inloggen");
+                            error.printStackTrace();
                         }
-                        error.printStackTrace();
-                    }
-                });
-                queue.add(arrReq1);
+                    }){
+                        @Override
+                        public Map<String, String> getHeaders() throws AuthFailureError {
+                            Map<String, String> headers = new HashMap<>();
+                            String credentials = "Group2:Group2-1234";
+                            String auth = "Basic "
+                                    + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
+                            headers.put("Content-Type", "application/json");
+                            headers.put("Authorization", auth);
+                            return headers;
+                        }
+                    };
+                    queue.add(arrReq1);
+                }
             }
         }
     }

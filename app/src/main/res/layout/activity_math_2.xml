@@ -74,7 +74,7 @@
         android:layout_marginEnd="18dp"
         android:layout_marginTop="62dp"
         android:background="@android:color/holo_orange_dark"
-        android:text="Add Flag" />
+        android:text="Voeg vlag toe" />
 
     <ImageView
         android:id="@+id/imageView4"
@@ -110,6 +110,15 @@
         app:srcCompat="@drawable/carr" />
 
     <ImageView
+        android:id="@+id/carr2"
+        android:layout_width="50dp"
+        android:layout_height="52dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="181dp"
+        app:srcCompat="@drawable/carr2" />
+
+    <ImageView
         android:id="@+id/imageView2"
         android:layout_width="41dp"
         android:layout_height="49dp"
@@ -118,7 +127,7 @@
         android:layout_marginTop="196dp"
         app:srcCompat="@drawable/flag" />
 
-    <LinearLayout xmlns:tools="http://schemas.android.com/tools"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="372dp"
         android:layout_alignParentStart="true"
@@ -132,7 +141,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
             android:layout_marginTop="5dp"
-            android:text="438: Formule\: inhoud l*b*h"
+            android:text="471: Omrekenen van veel voorkomende kubieke maten"
             android:textColor="@color/colorPrimaryDark"
             android:textSize="20dp"
             android:textStyle="bold" />
@@ -147,5 +156,12 @@
             android:thumb="@drawable/baseball" />
 
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/thumb_mirror"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        app:srcCompat="@drawable/baseball2" />
 
 </RelativeLayout>

@@ -7,6 +7,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import android.util.Base64;
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -20,23 +21,18 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.HttpResponse;
-import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Math_1 extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
     ImageView carr;
@@ -115,26 +111,29 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
-        width = size.x - carr.getMeasuredWidth();
+        width = size.x - 20;
         allReady();
     }
 
     public void allReady(){
         float coords1[];
         float coords2[] = {};
-        final int pos;
         coords1 = coordDatas.getCoord_data(0).getCoord_data();
         if (USAGEDAY < 4){
             flag_id = R.id.imageView5;
             two_days = false;
+            carr2.setVisibility(View.INVISIBLE);
         } else{
             flag_id = R.id.imageView4;
-            flag_1.setVisibility(View.VISIBLE);
+            flag_1.setVisibility(View.VISIBLE); //huh why again?
+            add_flag_button.setVisibility(View.INVISIBLE);
             coords2 = coordDatas.getCoord_data(3).getCoord_data();
             two_days = true;
         }
-        float elowidthday1 = width / coords1.length *eloScores.getElo_scores(0);
-        float elowidthday2 = width / coords2.length * (eloScores.getElo_scores(3) - eloScores.getElo_scores(0));
+        if (USAGEDAY==3) flag_id = R.id.imageView4;
+        float elowidthday1 = coords1.length>0?width / coords1.length *eloScores.getElo_scores(0):0;
+        Log.d("elo-scores", String.valueOf(coords2.length)+" "+String.valueOf(eloScores.getElo_scores(5)-eloScores.getElo_scores(2)));
+        float elowidthday2 = coords2.length>0?width / coords2.length * (eloScores.getElo_scores(3) - eloScores.getElo_scores(0)):0;
         animateCar(elowidthday1, elowidthday2, coords1, coords2, two_days);
 
         final Thread thread = new Thread(){
@@ -181,7 +180,6 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
         }
 
         thread.start();
-
     }
 
     private void animateCar(final float x1, final float x2, final float[] coordarray1, final float[] coordarray2, final boolean move_twice){
@@ -322,18 +320,17 @@ public class Math_1 extends AppCompatActivity implements View.OnClickListener, V
                 }
                 error.printStackTrace();
             }
-        }));
-    }
-
-    public float[] concatenate(float[] a, float[] b) {
-        int aLen = a.length;
-        int bLen = b.length;
-
-        @SuppressWarnings("unchecked")
-        float[] c = (float[]) Array.newInstance(a.getClass().getComponentType(), aLen + bLen);
-        System.arraycopy(a, 0, c, 0, aLen);
-        System.arraycopy(b, 0, c, aLen, bLen);
-
-        return c;
+        }){
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> headers = new HashMap<>();
+                String credentials = "Group2:Group2-1234";
+                String auth = "Basic "
+                        + Base64.encodeToString(credentials.getBytes(), Base64.NO_WRAP);
+                headers.put("Content-Type", "application/json");
+                headers.put("Authorization", auth);
+                return headers;
+            }
+        });
     }
 }
