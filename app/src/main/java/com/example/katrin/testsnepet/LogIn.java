@@ -169,8 +169,14 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                             }
                             flagPositions.setFlagsreceived(true);
                         }
-                    }catch (JSONException e) {
+                    } catch (JSONException e) {
                         e.printStackTrace();
+                    }
+                }
+                if (!flagPositions.isFlagsreceived()){
+                    for (int j = 0; j < 6; j++) {
+                        flagPositions.setCoord(-1, j+1);
+                        flagPositions.setFlagsreceived(true);
                     }
                 }
                 getEloAndCoordinates(user_id);

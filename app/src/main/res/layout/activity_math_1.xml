@@ -141,7 +141,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
             android:layout_marginTop="5dp"
-            android:text="438: Formule\: inhoud l*b*h"
+            android:text="445: Formule\: inhoud l x b x h"
             android:textColor="@color/colorPrimaryDark"
             android:textSize="20dp"
             android:textStyle="bold" />

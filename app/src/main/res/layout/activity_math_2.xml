@@ -141,7 +141,7 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
             android:layout_marginTop="5dp"
-            android:text="471: Omrekenen van veel voorkomende kubieke maten"
+            android:text="478: kubieke maten omrekenen"
             android:textColor="@color/colorPrimaryDark"
             android:textSize="20dp"
             android:textStyle="bold" />
