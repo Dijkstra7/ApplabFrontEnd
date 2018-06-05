@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static java.lang.Math.min;
+import static java.lang.StrictMath.max;
 
 public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
@@ -41,9 +42,12 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
     float elo1;
     float elo2;
     float elo3;
-    ArrayList<Double> coordarrayday1;
-    ArrayList<Double> coordarrayday2;
-    ArrayList<Double> coordarrayday3;
+    float[] coordarrayday1 = {0};
+    float[] coordarrayday2 = {0};
+    float[] coordarrayday3 = {0};
+    float[] coordarrayday4 = {0};
+    float[] coordarrayday5 = {0};
+    float[] coordarrayday6 = {0};
     ArrayList<String> loids;
     ArrayList<String> dates;
     boolean day_1_ready = false;
@@ -52,7 +56,10 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
     int width;
     int USAGEDAY;
     FlagPositions flagPositions;
-    EloScores eloScores;
+    EloScores2 fake;
+    float[] eloScores2 = {0, 0, 0, 0, 0, 0};
+    boolean eloReady = false;
+    int eloNumber = 0;
     CoordDatas coordDatas;
     private String User_id = null;
 
@@ -106,7 +113,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                             User_id = users.getString("UserId");
                             getFlags(User_id);
                         } else {
-                            Toast.makeText(getApplicationContext(), "Username or Password is wrong please, be sure you wrote correct data! ", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Gebruikersnaam of wachtwoord is fout. Probeer het nog een keer.", Toast.LENGTH_SHORT).show();
                             login.setText("Log in");
                         }
                         Log.d("====>", "User_ID ="+User_id+"; Pass ="+Passw+"; Should be "+pass+";");
@@ -114,7 +121,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                 } catch (JSONException e)
                 {
                     if (e instanceof JSONException){
-                        Toast.makeText(getApplicationContext(), "Username or Password is wrong please, be sure you wrote correct data! ", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Gebruikersnaam of wachtwoord is fout. Probeer het nog een keer.", Toast.LENGTH_SHORT).show();
                         login.setText("Log in");
                     }
                     e.printStackTrace();
@@ -207,9 +214,9 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
         queue.add(flagrequest);
     }
     private void getEloAndCoordinates(final String userid) {
-        eloScores = new EloScores();
+        eloScores2 = new float[6];
         coordDatas = new CoordDatas();
-        String curlbase = "http://applab.ai.ru.nl:5000/calculate_m2m_coordinates/user_id=";
+        String curlbase = "http://applab.ai.ru.nl:5000/fast_m2m/user_id=";
         final String eurlbase = "http://applab.ai.ru.nl:5000/scores/day=";
         for (int day=0; day<4; day++){
             final int d = day;
@@ -217,11 +224,12 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
             for (int rep = 0; rep < reps; rep++) {
                 final int r = rep;
                 if (d>=USAGEDAY){
-                    eloScores.setElo_scores((float) 0, d+r);
-                    coordDatas.setCoord_data(new CoordData(new float[]{0}), d+r);
+                    eloScores2[d+r] = (float) 0;
+                    eloNumber+=2;
+                    Log.d("elonumber", String.valueOf(eloNumber));
                     if (isReady()) allReady();
                 } else {
-                    final String coordurl1 = curlbase + userid + "/loid=" + loids.get((day+rep)%3)+"/date="+dates.get(day);
+                    final String coordurl1 = curlbase + userid + "/loid=" + loids.get((day+rep)%3)+"/day="+String.valueOf(day+1);
                     JsonArrayRequest arrReq1 = new JsonArrayRequest(Request.Method.GET, coordurl1, null,
                             new Response.Listener<JSONArray>() {
                                 @Override
@@ -236,17 +244,20 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                                                     Log.d("Received", elourlday1);
                                                     double elodouble = 0;
                                                     try {
-                                                        elodouble = min(responseelo.getDouble(0) / 600., 1.);
-                                                        Log.d("Real Elo", String.valueOf(elodouble));
-                                                        eloScores.setElo_scores((float) elodouble, d+r);
+                                                        elodouble = max(min(responseelo.getDouble(0) / 600., 1.), 0.);
+                                                        Log.d("Real Elo "+String.valueOf(d+r), String.valueOf(elodouble));
+                                                        eloScores2[d+r] = (float) elodouble;
+                                                        eloNumber++;
+                                                        Log.d("elonumber", String.valueOf(eloNumber));
                                                         Log.d("Elo_ready", String.valueOf(flagPositions.isFlagsreceived()));
                                                         if (isReady()) {
                                                             allReady();
                                                         }
 
                                                     } catch (JSONException e) {
-                                                        eloScores.setElo_scores((float) 0
-                                                                , d+r);
+                                                        eloScores2[d+r] = (float) 0;
+                                                        eloNumber++;
+                                                        Log.d("elonumber", String.valueOf(eloNumber));
                                                         if (isReady()) allReady();
                                                         e.printStackTrace();
                                                     }
@@ -277,18 +288,167 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                                     queue.add(eloScore1);
                                     try {
                                         if (jsonArray != null && jsonArray.length() > 0) {
-                                            float[] coordArray = new float[jsonArray.length()];
-                                            for (int i = 0; i < jsonArray.length(); i++) {
-                                                coordArray[i] = (float) jsonArray.getDouble(i);
+                                            switch (d+r) {
+                                                case 0:
+                                                    coordarrayday1 = new float[jsonArray.length()];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday1[i] = (float) jsonArray.getDouble(i);
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                case 1:
+                                                    coordarrayday2 = new float[jsonArray.length()];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday2[i] = (float) jsonArray.getDouble(i);
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                case 2:
+                                                    coordarrayday3 = new float[jsonArray.length()];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday1[i] = (float) jsonArray.getDouble(i);
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                case 3:
+                                                    coordarrayday4 = new float[jsonArray.length()];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday4[i] = (float) jsonArray.getDouble(i);
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                case 4:
+                                                    coordarrayday5 = new float[jsonArray.length()];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday5[i] = (float) jsonArray.getDouble(i);
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                case 5:
+                                                    coordarrayday6 = new float[jsonArray.length()];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday6[i] = (float) jsonArray.getDouble(i);
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                default:
+                                                    Log.d("error in cases case", String.valueOf(d+r));
                                             }
-                                            coordDatas.setCoord_data(new CoordData(coordArray), d+r);
                                             if (isReady()) allReady();
                                         } else { //should be a different error message?
-                                            coordDatas.setCoord_data(new CoordData(new float[]{0}), d+r);
+                                            switch (d+r) {
+                                                case 0:
+                                                    coordarrayday1 = new float[1];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday1[i] = (float) 0;
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                case 1:
+                                                    coordarrayday2 = new float[1];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday2[i] = (float) 0;
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                case 2:
+                                                    coordarrayday3 = new float[1];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday1[i] = (float) 0;
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                case 3:
+                                                    coordarrayday4 = new float[1];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday4[i] = (float) 0;
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                case 4:
+                                                    coordarrayday5 = new float[1];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday5[i] = (float) 0;
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                case 5:
+                                                    coordarrayday6 = new float[1];
+                                                    for (int i = 0; i < jsonArray.length(); i++) {
+                                                        coordarrayday6[i] = (float) 0;
+                                                    }
+                                                    eloNumber++;
+                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    break;
+                                                default:
+                                                    Log.d("Foutje in cases, case", String.valueOf(d+r));
+                                            }
                                             if (isReady()) allReady();
                                         }
                                     } catch (JSONException e) {
-                                        coordDatas.setCoord_data(new CoordData(new float[]{0}), d+r);
+                                        switch (d+r) {
+                                            case 0:
+                                                coordarrayday1 = new float[1];
+                                                for (int i = 0; i < jsonArray.length(); i++) {
+                                                    coordarrayday1[i] = (float) 0;
+                                                }
+                                                eloNumber++;
+                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                break;
+                                            case 1:
+                                                coordarrayday2 = new float[1];
+                                                for (int i = 0; i < jsonArray.length(); i++) {
+                                                    coordarrayday2[i] = (float) 0;
+                                                }
+                                                eloNumber++;
+                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                break;
+                                            case 2:
+                                                coordarrayday3 = new float[1];
+                                                for (int i = 0; i < jsonArray.length(); i++) {
+                                                    coordarrayday1[i] = (float) 0;
+                                                }
+                                                eloNumber++;
+                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                break;
+                                            case 3:
+                                                coordarrayday4 = new float[1];
+                                                for (int i = 0; i < jsonArray.length(); i++) {
+                                                    coordarrayday4[i] = (float) 0;
+                                                }
+                                                eloNumber++;
+                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                break;
+                                            case 4:
+                                                coordarrayday5 = new float[1];
+                                                for (int i = 0; i < jsonArray.length(); i++) {
+                                                    coordarrayday5[i] = (float) 0;
+                                                }
+                                                eloNumber++;
+                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                break;
+                                            case 5:
+                                                coordarrayday6 = new float[1];
+                                                for (int i = 0; i < jsonArray.length(); i++) {
+                                                    coordarrayday6[i] = (float) 0;
+                                                }
+                                                eloNumber++;
+                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                break;
+                                            default:
+                                                Log.d("Fout bij case", String.valueOf(d+r));
+                                        }
                                         if (isReady()) allReady();
                                         e.printStackTrace();
                                     }
@@ -323,8 +483,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
     private boolean isReady(){
         if (!flagPositions.isFlagsreceived()) return false;
-        if (!eloScores.isElo_scores_received()) return false;
-        if (!coordDatas.isCoord_data_received()) return false;
+        if (eloNumber<12) return false;
         return true;
     }
 
@@ -341,10 +500,14 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
         b.putInt("USAGEDAY", USAGEDAY);
         Intent intent = new Intent(LogIn.this, Math_1.class);
         intent.putExtra("userID", User_id);
-        intent.putExtra("username", usrnm);
         intent.putExtra("flagpositions", flagPositions);
-        intent.putExtra("coorddatalist", coordDatas);
-        intent.putExtra("eloscores", eloScores);
+        intent.putExtra("coord1", coordarrayday1);
+        intent.putExtra("coord2", coordarrayday2);
+        intent.putExtra("coord3", coordarrayday3);
+        intent.putExtra("coord4", coordarrayday4);
+        intent.putExtra("coord5", coordarrayday5);
+        intent.putExtra("coord6", coordarrayday6);
+        intent.putExtra("eloscores", eloScores2);
         intent.putExtras(b);
         startActivity(intent);
     }

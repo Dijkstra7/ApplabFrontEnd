@@ -45,8 +45,15 @@ public class Math_2 extends AppCompatActivity implements View.OnClickListener, V
     String userid;
     RequestQueue queue;
     FlagPositions flagPositions;
-    EloScores eloScores;
-    CoordDatas coordDatas;
+    float[] eloScores2;
+    float[] coordarrayday1;
+    float[] coordarrayday2;
+    float[] coordarrayday3;
+    float[] coordarrayday4;
+    float[] coordarrayday5;
+    float[] coordarrayday6;
+    float[] coords1;
+    float[] coords2;
     boolean two_days;
     int USAGEDAY;
     int width;
@@ -94,9 +101,16 @@ public class Math_2 extends AppCompatActivity implements View.OnClickListener, V
         Intent intent = getIntent();
         userid = intent.getStringExtra("userID");
         Bundle b = intent.getExtras();
-        coordDatas = intent.getParcelableExtra("coorddatalist");
-        eloScores = intent.getParcelableExtra("eloscores");
         flagPositions = intent.getParcelableExtra("flagpositions");
+        coordarrayday1 = intent.getFloatArrayExtra("coord1");
+        coordarrayday2 = intent.getFloatArrayExtra("coord2");
+        coordarrayday3 = intent.getFloatArrayExtra("coord3");
+        coordarrayday4 = intent.getFloatArrayExtra("coord4");
+        coordarrayday5 = intent.getFloatArrayExtra("coord5");
+        coordarrayday6 = intent.getFloatArrayExtra("coord6");
+        coords1 = coordarrayday3;
+        coords2 = coordarrayday4;
+        eloScores2 = intent.getFloatArrayExtra("eloscores");
         USAGEDAY = b.getInt("USAGEDAY");
 
         queue = Volley.newRequestQueue(this);
@@ -117,9 +131,6 @@ public class Math_2 extends AppCompatActivity implements View.OnClickListener, V
     }
 
     public void allReady(){
-        float coords1[];
-        float coords2[] = {};
-        coords1 = coordDatas.getCoord_data(1).getCoord_data();
         if (USAGEDAY < 4){
             flag_id = R.id.imageView5;
             two_days = false;
@@ -128,20 +139,19 @@ public class Math_2 extends AppCompatActivity implements View.OnClickListener, V
             flag_id = R.id.imageView4;
             flag_1.setVisibility(View.VISIBLE);
             add_flag_button.setVisibility(View.INVISIBLE);
-            coords2 = coordDatas.getCoord_data(4).getCoord_data();
             two_days = true;
         }
         if (USAGEDAY==3) flag_id = R.id.imageView4;
-        float elowidthday1 = coords1.length>0? width / coords1.length * eloScores.getElo_scores(1):0;
-        float elowidthday2 = coords2.length>0?width / coords2.length * (eloScores.getElo_scores(4) - eloScores.getElo_scores(1)):0;
+        float elowidthday1 = coords1.length>1? width / coords1.length * eloScores2[1]:0;
+        float elowidthday2 = coords2.length>1?width / coords2.length * (eloScores2[4] - eloScores2[1]):0;
         animateCar(elowidthday1, elowidthday2, coords1, coords2, two_days);
 
         final Thread thread = new Thread(){
 
             public void run(){
                 try {
-                    Log.d("Elo1", String.valueOf(100.*eloScores.getElo_scores(1)));
-                    for (int i = 0; i < 100.*eloScores.getElo_scores(1); i++){
+                    Log.d("Elo1", String.valueOf(100.* eloScores2[1]));
+                    for (int i = 0; i < 100.* eloScores2[1]; i++){
                         pbar.setProgress(i);
                         sleep(30);
                     }
@@ -156,7 +166,7 @@ public class Math_2 extends AppCompatActivity implements View.OnClickListener, V
                             baseballmirror.setVisibility(View.VISIBLE);
                         }
                     });
-                    for (int i = pbar.getProgress(); i < (100. * eloScores.getElo_scores(4)); i++) {
+                    for (int i = pbar.getProgress(); i < (100. * eloScores2[4]); i++) {
                         pbar.setProgress(i);
                         sleep(30);
                     }
@@ -260,8 +270,13 @@ public class Math_2 extends AppCompatActivity implements View.OnClickListener, V
                 intent2.putExtra("username", userid);
                 intent2.putExtras(b);
                 intent2.putExtra("flagpositions", flagPositions);
-                intent2.putExtra("eloscores", eloScores);
-                intent2.putExtra("coorddatalist", coordDatas);
+                intent2.putExtra("coord1", coordarrayday1);
+                intent2.putExtra("coord2", coordarrayday2);
+                intent2.putExtra("coord3", coordarrayday3);
+                intent2.putExtra("coord4", coordarrayday4);
+                intent2.putExtra("coord5", coordarrayday5);
+                intent2.putExtra("coord6", coordarrayday6);
+                intent2.putExtra("eloscores", eloScores2);
                 startActivity(intent2);
                 break;
             case R.id.button3:
@@ -272,8 +287,13 @@ public class Math_2 extends AppCompatActivity implements View.OnClickListener, V
                 intent3.putExtra("username", userid);
                 intent3.putExtras(b3);
                 intent3.putExtra("flagpositions", flagPositions);
-                intent3.putExtra("eloscores", eloScores);
-                intent3.putExtra("coorddatalist", coordDatas);
+                intent3.putExtra("coord1", coordarrayday1);
+                intent3.putExtra("coord2", coordarrayday2);
+                intent3.putExtra("coord3", coordarrayday3);
+                intent3.putExtra("coord4", coordarrayday4);
+                intent3.putExtra("coord5", coordarrayday5);
+                intent3.putExtra("coord6", coordarrayday6);
+                intent3.putExtra("eloscores", eloScores2);
                 startActivity(intent3);
                 break;
         }

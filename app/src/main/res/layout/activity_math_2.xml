@@ -21,7 +21,7 @@
             android:layout_weight="1"
             android:background="@android:color/holo_green_light"
             android:fontFamily="casual"
-            android:text="438"
+            android:text="445"
             android:textAllCaps="false"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -33,7 +33,7 @@
             android:layout_weight="1"
             android:background="@android:color/holo_blue_light"
             android:fontFamily="casual"
-            android:text="471"
+            android:text="478"
             android:textAllCaps="false"
             android:textSize="18sp"
             android:textStyle="bold" />
@@ -45,7 +45,7 @@
             android:layout_weight="1"
             android:background="@android:color/holo_orange_light"
             android:fontFamily="casual"
-            android:text="472"
+            android:text="479"
             android:textSize="18sp"
             android:textStyle="bold"
             android:typeface="normal"
