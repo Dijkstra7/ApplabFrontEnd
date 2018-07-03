@@ -1,5 +1,6 @@
 package com.example.katrin.testsnepet;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -33,116 +34,244 @@ import java.util.Map;
 import static java.lang.Math.min;
 import static java.lang.StrictMath.max;
 
+/**
+ * The LogIn class is responsible for the logic of the first screen. With this class the user can
+ * enter its username and password and click on the login button. The class will then check whether
+ * the login and password are correct. When this is the case try to load the other data for the
+ * user. Upon success it will load the Math screen. Upon failure it will provide an error message
+ * for the user.
+ * Javadoc created by Rick Dijkstra
+ *
+ * @author Rick Dijkstra
+ * @author Katrin Bujari
+ * @author Alessandro Ardu
+ * @version 1.0, 5 jun 2018
+ */
 public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
+    /** The button and EditText fields are referenced for easier manipulation. */
     Button login;
     EditText usr_password, username;
+
+    /** The queue is used to send requests to the API*/
     RequestQueue queue;
+
+    /** Store the username, as written by the user in the username EditText field/ */
     String usrnm;
-    float elo1;
-    float elo2;
-    float elo3;
+
+    /** Store the coordinates as retrieved from the API. */
     float[] coordarrayday1 = {0};
     float[] coordarrayday2 = {0};
     float[] coordarrayday3 = {0};
     float[] coordarrayday4 = {0};
     float[] coordarrayday5 = {0};
     float[] coordarrayday6 = {0};
+
+    /** Store the values of the used learning objectives. */
     ArrayList<String> loids;
+
+    /** Store the values of the used dates. */
     ArrayList<String> dates;
-    boolean day_1_ready = false;
-    boolean day_2_ready = false;
-    boolean day_3_ready = false;
-    int width;
+
+    /** Store the numeric value of the day that the app is used. */
     int USAGEDAY;
+
+    /** Store the positions of the flag as received from the API*/
     FlagPositions flagPositions;
-    EloScores2 fake;
+
+    /** Store the ELO score values as retrieved from the API*/
     float[] eloScores2 = {0, 0, 0, 0, 0, 0};
-    boolean eloReady = false;
-    int eloNumber = 0;
-    CoordDatas coordDatas;
+
+    /** Keep track of how many values of the API have been received correctly. */
+    int apiValuesReceived = 0;
+
+    /** Store the user ID received from the API. Used to communicate with the API. */
     private String User_id = null;
 
+    /**
+     * Setting up the login screen.
+     * Sets up variables of learning objective ID's, dates that the app will be used, and finds out
+     * what the current day is that the app is used. Sets up the listener for the login button and
+     * the queue that will handle the API requests. Registers the text boxes and button.
+     * <p>
+     * Notice that the learning objective IDs and the dates that the app is used are hardcoded. This
+     * is because of the need of the API for hardcoded dates and learning objectives.
+     * <p>
+     * At the moment there is no implementation for saved instances, so savedInstanceState is not
+     * used.
+     *
+     * @author Rick Dijkstra
+     * @author Katrin Bujari
+     * @param savedInstanceState a Bundle containing the saved instance. Not used.
+     * @since 1.0
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Standard screen setup.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_in);
 
-        getSupportActionBar().hide();
+        // Hide the action bar.
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
+        // Create the requestqueue for communication with the API.
         queue = Volley.newRequestQueue(this);
 
+        // Hardcode which learning objectives and dates will be used for API communication.
         loids = new ArrayList<>(Arrays.asList("8025", "7789", "7771"));
-        dates = new ArrayList<>(Arrays.asList("2017-11-28", "2017-11-29", "2017-11-30", "2017-12-01"));
-        username = (EditText) findViewById(R.id.username);
-        usr_password = (EditText) findViewById(R.id.usr_password);
-        login = (Button) findViewById(R.id.sing_in);
+        dates = new ArrayList<>(Arrays.asList("2017-11-28", "2017-11-29", "2017-11-30",
+                "2017-12-01"));
+
+        // Register objects for easier handling.
+        username = findViewById(R.id.username);
+        usr_password = findViewById(R.id.usr_password);
+        login = findViewById(R.id.sing_in);
+
+        // Set listener to login button
         login.setOnClickListener(this);
+
+        // Get date of today
         Calendar cal = Calendar.getInstance();
         cal.setTime(Calendar.getInstance().getTime());
         USAGEDAY = cal.get((Calendar.DAY_OF_WEEK))-2; // Monday =0, Tuesday=1 etc.
-        Log.d("date today", String.valueOf(cal.get(Calendar.DAY_OF_WEEK)));
     }
 
+    /**
+     * Handles what happens when a click is registered. Only handles case of login bundle being
+     * clicked. In that case it changes the text of the login button and starts the process of
+     * logging in.
+     *
+     * @author Rick Dijkstra
+     *
+     * @param view  the screen in which the onClick action is happening
+     *
+     * @since 1.0
+     */
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.sing_in) {
-
+            // Retrieve values needed to check whether login is valid.
             usrnm = username.getText().toString();
             String psswrd = usr_password.getText().toString();
+
+            // Change text on login button to show that program is busy logging in.
             login.setText("Inloggen...");
-            jsonParse(usrnm, psswrd);
+
+            // Start Logging in.
+            startLoggingIn(usrnm, psswrd);
         }
     }
 
-    private void jsonParse(final String user, final String pass){
-
+    /**
+     * Handles the starting phase of logging in.
+     * <p>First checks with the API whether the username and password are given correctly. Shows a
+     * popup message if that this is not the case. Alerts the user if there is some connection error
+     * and asks it to try again.
+     * <p>Starts requesting user data from the API when the username and password match. Starting
+     * with the locations of the flags.
+     * <p>All contact with the API is through authorization security
+     *
+     * @author Rick Dijkstra
+     * @author Katrin Bujari
+     * @param user  The username given by the user in the corresponding EditText field.
+     * @param pass  The password given by the user in the corresponding EditText field.
+     * @since 1.0
+     */
+    private void startLoggingIn(final String user, final String pass){
+        // Setting up URL to request the user ID and password from the API.
         final String url = "http://applab.ai.ru.nl:5000/login_users/username="+user;
+
+        // Creating the request for the log in (long function).
         JsonArrayRequest arrReq = new JsonArrayRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONArray>() {
-            @Override
-            public void onResponse(JSONArray response)
-            {
-                Log.d("Received", url);
-                try
-                {
-                    JSONArray jsonArray = response;
-                    JSONObject users = jsonArray.getJSONObject(0);
-                    if (jsonArray != null && jsonArray.length() > 0) {
-                        String Passw = users.getString("Password");
-                        if (pass.equals(Passw)) {
-                            User_id = users.getString("UserId");
-                            getFlags(User_id);
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Gebruikersnaam of wachtwoord is fout. Probeer het nog een keer.", Toast.LENGTH_SHORT).show();
+                    /**
+                     * Starts when the Listener has received an answer from the API. Checks whether
+                     * the given password and stored password match. Creates a message if passwords
+                     * do not match. Otherwise starts retrieving the rest of the data starting with
+                     * the flags.
+                     *
+                     * @author Rick Dijkstra
+                     * @author Katrin Bujari
+                     * @param response  JSONObject containing the username, password and ID for the
+                     *                  user as specified in the url.
+                     * @since 1.0
+                     */
+                    @Override
+                    public void onResponse(JSONArray response)
+                    {
+                        try
+                        {
+                            if (response.length() > 0) { // The username is in our database
+                                // Get first instance in database (In case of duplicates).
+                                JSONObject users = response.getJSONObject(0);
+
+                                // Store the password.
+                                String Passw = users.getString("Password");
+
+                                if (pass.equals(Passw)) { // Password is correct
+                                    // Store user ID
+                                    User_id = users.getString("UserId");
+
+                                    // Start retrieving data with the flags.
+                                    getFlags(User_id);
+                                } else { // Passwords do not match. Give error message.
+                                    Toast.makeText(getApplicationContext(), "Gebruikersnaam" +
+                                            " of wachtwoord is fout. Probeer het nog een keer.",
+                                            Toast.LENGTH_SHORT).show();
+
+                                    // Reset text of login button.
+                                    login.setText("Log in");
+                                }
+                            }
+                        } catch (JSONException e) { // If the response is not the correct object.
+                            // Show error message on screen with pop up.
+                            Toast.makeText(getApplicationContext(), "Er ging iets fout " +
+                                    "tijdens het inlogggen. Probeer het nog een keer.",
+                                    Toast.LENGTH_SHORT).show();
+
+                            // Reset text of login button.
                             login.setText("Log in");
+
+                            // Print Stack Trace for debugging.
+                            e.printStackTrace();
                         }
-                        Log.d("====>", "User_ID ="+User_id+"; Pass ="+Passw+"; Should be "+pass+";");
                     }
-                } catch (JSONException e)
-                {
-                    if (e instanceof JSONException){
-                        Toast.makeText(getApplicationContext(), "Gebruikersnaam of wachtwoord is fout. Probeer het nog een keer.", Toast.LENGTH_SHORT).show();
-                        login.setText("Log in");
-                    }
-                    e.printStackTrace();
-                }
-            }
         }, new Response.ErrorListener()
         {
+            /**
+             * Handles errors happening during retrieving of information from the API. Only errors
+             * being handled are Timeout and Server error.
+             *
+             * @author Rick Dijkstra
+             * @param error VolleyError describing the error. Has information about what happened.
+             * @since 1.0
+             */
             @Override
             public void onErrorResponse(VolleyError error)
             {
-                Log.d("Failed", url);
                 if (error instanceof TimeoutError || error instanceof ServerError){
-                    Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
+                    // Create error message on screen with a pop up.
+                    Toast.makeText(LogIn.this,"Er ging iets fout tijdens het " +
+                            "inlogggen. Probeer het nog een keer", Toast.LENGTH_SHORT).show();
                     login.setText("Inloggen");
                 }
 
+                // Print Stack Trace for debugging.
                 error.printStackTrace();
             }
         }){
+            /**
+             * Adds headers to the request in order to authenticate the app and get the data from
+             * the API.
+             *
+             * @author Alessandro Ardu
+             * @return the headers to be added to the request.
+             * @since 1.0
+             */
             @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
+            public Map<String, String> getHeaders() {
                 Map<String, String> headers = new HashMap<>();
                 String credentials = "Group2:Group2-1234";
                 String auth = "Basic "
@@ -151,16 +280,17 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                 headers.put("Authorization", auth);
                 return headers;
             }
-        };
+        }; // End of creating the request
+
+        // Add the request to the queue
         queue.add(arrReq);
-
-
     }
 
     private void getFlags(final String user_id){
         flagPositions = new FlagPositions();
         final String flagurl = "http://applab.ai.ru.nl:5000/list_flag_positions";
-        JsonArrayRequest flagrequest = new JsonArrayRequest(Request.Method.GET, flagurl, null, new Response.Listener<JSONArray>() {
+        JsonArrayRequest flagrequest = new JsonArrayRequest(Request.Method.GET, flagurl,
+                null, new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
                 Log.d("Received", flagurl);
@@ -194,14 +324,15 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
             public void onErrorResponse(VolleyError error) {
                 Log.d("Failed", flagurl);
                 if (error instanceof TimeoutError || error instanceof ServerError){
-                    Toast.makeText(LogIn.this,"Er ging iets fout tijdens het inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LogIn.this,"Er ging iets fout tijdens het " +
+                            "inlogggen. probeer het nog een keer", Toast.LENGTH_SHORT).show();
                     login.setText("Inloggen");
                 }
                 error.printStackTrace();
             }
         }){
             @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
+            public Map<String, String> getHeaders() {
                 Map<String, String> headers = new HashMap<>();
                 String credentials = "Group2:Group2-1234";
                 String auth = "Basic "
@@ -215,7 +346,6 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
     }
     private void getEloAndCoordinates(final String userid) {
         eloScores2 = new float[6];
-        coordDatas = new CoordDatas();
         String curlbase = "http://applab.ai.ru.nl:5000/fast_m2m/user_id=";
         final String eurlbase = "http://applab.ai.ru.nl:5000/scores/day=";
         for (int day=0; day<4; day++){
@@ -225,8 +355,8 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                 final int r = rep;
                 if (d>=USAGEDAY){
                     eloScores2[d+r] = (float) 0;
-                    eloNumber+=2;
-                    Log.d("elonumber", String.valueOf(eloNumber));
+                    apiValuesReceived +=2;
+                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                     if (isReady()) allReady();
                 } else {
                     final String coordurl1 = curlbase + userid + "/loid=" + loids.get((day+rep)%3)+"/day="+String.valueOf(day+1);
@@ -247,8 +377,8 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                                                         elodouble = max(min(responseelo.getDouble(0) / 600., 1.), 0.);
                                                         Log.d("Real Elo "+String.valueOf(d+r), String.valueOf(elodouble));
                                                         eloScores2[d+r] = (float) elodouble;
-                                                        eloNumber++;
-                                                        Log.d("elonumber", String.valueOf(eloNumber));
+                                                        apiValuesReceived++;
+                                                        Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                         Log.d("Elo_ready", String.valueOf(flagPositions.isFlagsreceived()));
                                                         if (isReady()) {
                                                             allReady();
@@ -256,8 +386,8 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
 
                                                     } catch (JSONException e) {
                                                         eloScores2[d+r] = (float) 0;
-                                                        eloNumber++;
-                                                        Log.d("elonumber", String.valueOf(eloNumber));
+                                                        apiValuesReceived++;
+                                                        Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                         if (isReady()) allReady();
                                                         e.printStackTrace();
                                                     }
@@ -275,7 +405,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                                         }
                                     }){
                                         @Override
-                                        public Map<String, String> getHeaders() throws AuthFailureError {
+                                        public Map<String, String> getHeaders() {
                                             Map<String, String> headers = new HashMap<>();
                                             String credentials = "Group2:Group2-1234";
                                             String auth = "Basic "
@@ -294,48 +424,48 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday1[i] = (float) jsonArray.getDouble(i);
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 case 1:
                                                     coordarrayday2 = new float[jsonArray.length()];
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday2[i] = (float) jsonArray.getDouble(i);
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 case 2:
                                                     coordarrayday3 = new float[jsonArray.length()];
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday1[i] = (float) jsonArray.getDouble(i);
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 case 3:
                                                     coordarrayday4 = new float[jsonArray.length()];
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday4[i] = (float) jsonArray.getDouble(i);
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 case 4:
                                                     coordarrayday5 = new float[jsonArray.length()];
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday5[i] = (float) jsonArray.getDouble(i);
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 case 5:
                                                     coordarrayday6 = new float[jsonArray.length()];
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday6[i] = (float) jsonArray.getDouble(i);
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 default:
                                                     Log.d("error in cases case", String.valueOf(d+r));
@@ -348,48 +478,48 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday1[i] = (float) 0;
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 case 1:
                                                     coordarrayday2 = new float[1];
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday2[i] = (float) 0;
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 case 2:
                                                     coordarrayday3 = new float[1];
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday1[i] = (float) 0;
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 case 3:
                                                     coordarrayday4 = new float[1];
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday4[i] = (float) 0;
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 case 4:
                                                     coordarrayday5 = new float[1];
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday5[i] = (float) 0;
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 case 5:
                                                     coordarrayday6 = new float[1];
                                                     for (int i = 0; i < jsonArray.length(); i++) {
                                                         coordarrayday6[i] = (float) 0;
                                                     }
-                                                    eloNumber++;
-                                                    Log.d("elonumber", String.valueOf(eloNumber));
+                                                    apiValuesReceived++;
+                                                    Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                     break;
                                                 default:
                                                     Log.d("Foutje in cases, case", String.valueOf(d+r));
@@ -403,48 +533,48 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                                                 for (int i = 0; i < jsonArray.length(); i++) {
                                                     coordarrayday1[i] = (float) 0;
                                                 }
-                                                eloNumber++;
-                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                apiValuesReceived++;
+                                                Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                 break;
                                             case 1:
                                                 coordarrayday2 = new float[1];
                                                 for (int i = 0; i < jsonArray.length(); i++) {
                                                     coordarrayday2[i] = (float) 0;
                                                 }
-                                                eloNumber++;
-                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                apiValuesReceived++;
+                                                Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                 break;
                                             case 2:
                                                 coordarrayday3 = new float[1];
                                                 for (int i = 0; i < jsonArray.length(); i++) {
                                                     coordarrayday1[i] = (float) 0;
                                                 }
-                                                eloNumber++;
-                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                apiValuesReceived++;
+                                                Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                 break;
                                             case 3:
                                                 coordarrayday4 = new float[1];
                                                 for (int i = 0; i < jsonArray.length(); i++) {
                                                     coordarrayday4[i] = (float) 0;
                                                 }
-                                                eloNumber++;
-                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                apiValuesReceived++;
+                                                Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                 break;
                                             case 4:
                                                 coordarrayday5 = new float[1];
                                                 for (int i = 0; i < jsonArray.length(); i++) {
                                                     coordarrayday5[i] = (float) 0;
                                                 }
-                                                eloNumber++;
-                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                apiValuesReceived++;
+                                                Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                 break;
                                             case 5:
                                                 coordarrayday6 = new float[1];
                                                 for (int i = 0; i < jsonArray.length(); i++) {
                                                     coordarrayday6[i] = (float) 0;
                                                 }
-                                                eloNumber++;
-                                                Log.d("elonumber", String.valueOf(eloNumber));
+                                                apiValuesReceived++;
+                                                Log.d("elonumber", String.valueOf(apiValuesReceived));
                                                 break;
                                             default:
                                                 Log.d("Fout bij case", String.valueOf(d+r));
@@ -465,7 +595,7 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
                         }
                     }){
                         @Override
-                        public Map<String, String> getHeaders() throws AuthFailureError {
+                        public Map<String, String> getHeaders() {
                             Map<String, String> headers = new HashMap<>();
                             String credentials = "Group2:Group2-1234";
                             String auth = "Basic "
@@ -481,10 +611,8 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
         }
     }
 
-    private boolean isReady(){
-        if (!flagPositions.isFlagsreceived()) return false;
-        if (eloNumber<12) return false;
-        return true;
+    private boolean isReady() {
+        return flagPositions.isFlagsreceived() && apiValuesReceived >= 12;
     }
 
     @Override

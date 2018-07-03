@@ -34,6 +34,13 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class is equivalent to the Math_1 class except for some hardcoded values. Will in the future
+ * be depricated.
+ *
+ * @see Math_1
+ * @since 1
+ */
 public class Math_2 extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
     ImageView carr;
     ImageView carr2;
