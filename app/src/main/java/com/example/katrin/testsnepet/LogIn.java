@@ -286,20 +286,39 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener {
         queue.add(arrReq);
     }
 
+    /**
+     * Retrieves the coordinates of the flags that the user has entered before from the API.
+     * Receives all flag coordinates at once in a list, where coordinates that have not yet been
+     * entered are represented as -1.
+     * <p>Stores the coordinates in the class flagPositions, sets the flag for flags being received
+     * to true, calls method to retrieve ELO score and coordinates.
+     *
+     * @author Rick Dijkstra
+     * @param user_id   String of the ID of the user, used to retrieve the correct flags from the
+     *                  API.
+     * @since 1.0
+     * @see FlagPositions
+     */
     private void getFlags(final String user_id){
+        // Create new instance to store positions.
         flagPositions = new FlagPositions();
+
+        // Set up URL for API
         final String flagurl = "http://applab.ai.ru.nl:5000/list_flag_positions";
+
+        // Create request to API to receive flag positions.
         JsonArrayRequest flagrequest = new JsonArrayRequest(Request.Method.GET, flagurl,
                 null, new Response.Listener<JSONArray>() {
+            /**
+             * Starts when the listener has a response from the API.
+             * @param response
+             */
             @Override
             public void onResponse(JSONArray response) {
-                Log.d("Received", flagurl);
                 for(int i =0; i<response.length();i++) {
                     try {
                         JSONObject flag_block = response.getJSONObject(i);
-//                        Log.d("IS this equal?"+flag_block.getString("UserId"), user_id);
                         if (flag_block.getString("UserId").equals(user_id)) {
-                            Log.d("Answer", "yes");
                             for (int j = 1; j < 7; j++) {
                                 int coord = flag_block.getInt("Flag" + String.valueOf(j));
                                 flagPositions.setCoord(coord, j);
