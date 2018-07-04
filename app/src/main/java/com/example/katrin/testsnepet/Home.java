@@ -8,6 +8,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+/**
+ * Handles overview of different topics. Since we used only one topic this class has been
+ * deprecated.
+ * @deprecated
+ * @author Katrin Bujari
+ */
 public class Home extends AppCompatActivity implements View.OnClickListener{
 
     TextView resultview;

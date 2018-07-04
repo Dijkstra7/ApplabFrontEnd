@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 /**
  * Stores the coordinates of the movement of the car in a float array. Implements Parcelable to
- * enable the passing on of the data through intent. However, due to unmarshalized error this class
+ * enable the passing on of the data through intent. However, due to unmarshalling error this class
  * is not in use at the moment.
  *
  * @author Rick Dijkstra

@@ -4,8 +4,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Stores a list of all the coordinates of the movement of the car in a coordData array. Implements
- * Parcelable to enable the passing on of the data through intent. However, due to unmarshalized
+ * Stores a list of all the coordinates of the movement of the car in a CoordData array. Implements
+ * Parcelable to enable the passing on of the data through intent. However, due to unmarshalling
  * error this class is not in use at the moment.
  *
  * @author Rick Dijkstra
